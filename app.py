@@ -8,6 +8,7 @@ from docx import Document
 import io
 import tempfile
 from astroquery.nasa_ads import ADS
+import pyvo as vo
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -61,6 +62,24 @@ def fetch_nasa_ads_references(prompt):
     
     except Exception as e:
         return [("Error fetching references", str(e), "N/A")]
+
+def fetch_exoplanet_data():
+    # Connect to NASA Exoplanet Archive TAP Service
+    tap_service = vo.dal.TAPService("https://exoplanetarchive.ipac.caltech.edu/TAP")
+
+    # Query to fetch all columns from the pscomppars table
+    ex_query = """
+        SELECT TOP 10 *
+        FROM pscomppars
+    """
+    # Execute the query
+    qresult = tap_service.search(ex_query)
+
+    # Convert to a Pandas DataFrame
+    ptable = qresult.to_table()
+    exoplanet_data = ptable.to_pandas()
+
+    return exoplanet_data
 
 def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if relevant_context:
@@ -117,6 +136,9 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
 
     # Export the response to a Word document
     word_doc_path = export_to_word(response)
+
+    # Fetch exoplanet data
+    exoplanet_data = fetch_exoplanet_data()
     
     # Embed Miro iframe
     iframe_html = """
@@ -151,7 +173,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         <button class="mapify-button">Create Mind Map on Mapify</button>
     </a>
     """
-    return response, iframe_html, mapify_button_html, word_doc_path
+    return response, iframe_html, mapify_button_html, word_doc_path, exoplanet_data
 
 iface = gr.Interface(
     fn=chatbot,
@@ -170,8 +192,9 @@ iface = gr.Interface(
         gr.HTML(label="Miro"),
         gr.HTML(label="Generate Mind Map on Mapify"),
         gr.File(label="Download SCDD", type="filepath"),
+        gr.Dataframe(label="Exoplanet Data Table")
     ],
-    title="SCDDBot - NASA SMD SCDD AI Assistant [version-0.2a]",
+    title="SCDDBot - NASA SMD SCDD AI Assistant [version-0.4a]",
     description="SCDDBot is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
