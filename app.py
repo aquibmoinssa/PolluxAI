@@ -23,7 +23,7 @@ client = OpenAI(api_key=api_key)
 ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
 
 # Define a system message to introduce Exos
-system_message = "You are Exos, a helpful assistant specializing in Exoplanet research. Provide detailed and accurate responses related to Exoplanet research."
+system_message = "You are ExosAI, a helpful assistant specializing in Astrophysics and Exoplanet research. Provide detailed and accurate responses related to Astrophysics and Exoplanet research."
 
 def encode_text(text):
     inputs = bi_tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
@@ -178,7 +178,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
 iface = gr.Interface(
     fn=chatbot,
     inputs=[
-        gr.Textbox(lines=2, placeholder="Formulate your science goal...", label="Prompt"),
+        gr.Textbox(lines=2, placeholder="Enter your Science Goal here...", label="Prompt ExosAI"),
         gr.Textbox(lines=5, placeholder="Enter some context here...", label="Context"),
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
         gr.Slider(50, 1000, value=150, step=10, label="Max Tokens"),
@@ -188,14 +188,14 @@ iface = gr.Interface(
         gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
     ],
     outputs=[
-        gr.Textbox(label="Model Response..."),
+        gr.Textbox(label="ExosAI finds..."),
         gr.HTML(label="Miro"),
         gr.HTML(label="Generate Mind Map on Mapify"),
         gr.File(label="Download SCDD", type="filepath"),
         gr.Dataframe(label="Exoplanet Data Table")
     ],
-    title="SCDDBot - NASA SMD SCDD AI Assistant [version-0.4a]",
-    description="SCDDBot is an AI-powered assistant for generating and visualising HWO Science Cases",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.4a]",
+    description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
 iface.launch(share=True)
