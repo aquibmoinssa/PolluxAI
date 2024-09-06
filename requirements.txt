@@ -4,3 +4,4 @@ scikit-learn
 openai
 python-docx
 astroquery
+pyvo
