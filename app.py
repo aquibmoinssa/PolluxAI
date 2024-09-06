@@ -37,7 +37,7 @@ def generate_response(user_input, relevant_context="", max_tokens=150, temperatu
         combined_input = f"Question: {user_input}\nAnswer:"
     
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-turbo",
         messages=[
             {"role": "system", "content": system_message},
             {"role": "user", "content": combined_input}
@@ -66,7 +66,7 @@ iface = gr.Interface(
         gr.Textbox(lines=2, placeholder="Enter your message here...", label="Your Question"),
         gr.Textbox(lines=5, placeholder="Enter context here, separated by new lines...", label="Context"),
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
-        gr.Slider(50, 500, value=150, step=10, label="Max Tokens"),
+        gr.Slider(50, 1000, value=150, step=10, label="Max Tokens"),
         gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
         gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p"),
         gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="Frequency Penalty"),
