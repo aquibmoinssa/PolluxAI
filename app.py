@@ -4,6 +4,10 @@ from openai import OpenAI
 import os
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from docx import Document
+import io
+import tempfile
+from astroquery.nasa_ads import ADS
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -14,27 +18,55 @@ bi_model = AutoModel.from_pretrained(bi_encoder_model_name)
 api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
+# Set up NASA ADS token
+ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
+
 # Define a system message to introduce Exos
 system_message = "You are Exos, a helpful assistant specializing in Exoplanet research. Provide detailed and accurate responses related to Exoplanet research."
 
 def encode_text(text):
     inputs = bi_tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
     outputs = bi_model(**inputs)
-    return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()  # Ensure the output is 2D
+    return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
 
 def retrieve_relevant_context(user_input, context_texts):
     user_embedding = encode_text(user_input).reshape(1, -1)
     context_embeddings = np.array([encode_text(text) for text in context_texts])
-    context_embeddings = context_embeddings.reshape(len(context_embeddings), -1)  # Flatten each embedding
+    context_embeddings = context_embeddings.reshape(len(context_embeddings), -1)
     similarities = cosine_similarity(user_embedding, context_embeddings).flatten()
     most_relevant_idx = np.argmax(similarities)
     return context_texts[most_relevant_idx]
 
-def generate_response(user_input, relevant_context="", max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
+def fetch_nasa_ads_references(prompt):
+    try:
+        # Use the entire prompt for the query
+        simplified_query = prompt
+
+        # Query NASA ADS for relevant papers
+        papers = ADS.query_simple(simplified_query)
+        
+        if not papers or len(papers) == 0:
+            return [("No results found", "N/A", "N/A")]
+        
+        # Include authors in the references
+        references = [
+            (
+                paper['title'][0], 
+                ", ".join(paper['author'][:3]) + (" et al." if len(paper['author']) > 3 else ""), 
+                paper['bibcode']
+            ) 
+            for paper in papers[:5]  # Limit to 5 references
+        ]
+        return references
+    
+    except Exception as e:
+        return [("Error fetching references", str(e), "N/A")]
+
+def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if relevant_context:
-        combined_input = f"Context: {relevant_context}\nQuestion: {user_input}\nAnswer:"
+        combined_input = f"Context: {relevant_context}\nQuestion: {user_input}\nAnswer (please organize the answer in a structured format with topics and subtopics):"
     else:
-        combined_input = f"Question: {user_input}\nAnswer:"
+        combined_input = f"Question: {user_input}\nAnswer (please organize the answer in a structured format with topics and subtopics):"
     
     response = client.chat.completions.create(
         model="gpt-4-turbo",
@@ -48,7 +80,27 @@ def generate_response(user_input, relevant_context="", max_tokens=150, temperatu
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty
     )
+    
+    # Append references to the response
+    if references:
+        response_content = response.choices[0].message.content.strip()
+        references_text = "\n\nADS References:\n" + "\n".join(
+            [f"- {title} by {authors} (Bibcode: {bibcode})" for title, authors, bibcode in references]
+        )
+        return f"{response_content}\n{references_text}"
+    
     return response.choices[0].message.content.strip()
+
+def export_to_word(response_content):
+    doc = Document()
+    doc.add_heading('AI Generated SCDD', 0)
+    for line in response_content.split('\n'):
+        doc.add_paragraph(line)
+    
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
+    doc.save(temp_file.name)
+    
+    return temp_file.name
 
 def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if use_encoder and context:
@@ -56,15 +108,56 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         relevant_context = retrieve_relevant_context(user_input, context_texts)
     else:
         relevant_context = ""
-    response = generate_response(user_input, relevant_context, max_tokens, temperature, top_p, frequency_penalty, presence_penalty)
-    return response
 
-# Create the Gradio interface
+    # Fetch NASA ADS references using the full prompt
+    references = fetch_nasa_ads_references(user_input)
+
+    # Generate response from GPT-4
+    response = generate_response(user_input, relevant_context, references, max_tokens, temperature, top_p, frequency_penalty, presence_penalty)
+
+    # Export the response to a Word document
+    word_doc_path = export_to_word(response)
+    
+    # Embed Miro iframe
+    iframe_html = """
+    <iframe width="768" height="432" src="https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721" frameborder="0" scrolling="no" allow="fullscreen; clipboard-read; clipboard-write" allowfullscreen></iframe>
+    """
+    
+    mapify_button_html = """
+    <style>
+        .mapify-button {
+            background: linear-gradient(135deg, #1E90FF 0%, #87CEFA 100%);
+            border: none;
+            color: white;
+            padding: 15px 35px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 2px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .mapify-button:hover {
+            background: linear-gradient(135deg, #4682B4 0%, #1E90FF 100%);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+    </style>
+    <a href="https://mapify.so/app/new" target="_blank">
+        <button class="mapify-button">Create Mind Map on Mapify</button>
+    </a>
+    """
+    return response, iframe_html, mapify_button_html, word_doc_path
+
 iface = gr.Interface(
     fn=chatbot,
     inputs=[
-        gr.Textbox(lines=2, placeholder="Enter your message here...", label="Your Question"),
-        gr.Textbox(lines=5, placeholder="Enter context here, separated by new lines...", label="Context"),
+        gr.Textbox(lines=2, placeholder="Formulate your science goal...", label="Prompt"),
+        gr.Textbox(lines=5, placeholder="Enter some context here...", label="Context"),
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
         gr.Slider(50, 1000, value=150, step=10, label="Max Tokens"),
         gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
@@ -72,10 +165,14 @@ iface = gr.Interface(
         gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="Frequency Penalty"),
         gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
     ],
-    outputs=gr.Textbox(label="Exos says..."),
-    title="Exos - Your Exoplanet Research Assistant",
-    description="Exos is a helpful assistant specializing in Exoplanet research. Provide context to get more refined and relevant responses.",
+    outputs=[
+        gr.Textbox(label="Model Response..."),
+        gr.HTML(label="Miro"),
+        gr.HTML(label="Generate Mind Map on Mapify"),
+        gr.File(label="Download SCDD", type="filepath"),
+    ],
+    title="SCDDBot - NASA SMD SCDD AI Assistant [version-0.2a]",
+    description="SCDDBot is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
-# Launch the interface
 iface.launch(share=True)
