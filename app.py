@@ -69,7 +69,7 @@ def fetch_exoplanet_data():
 
     # Query to fetch all columns from the pscomppars table
     ex_query = """
-        SELECT TOP 10 *
+        SELECT TOP 10 pl_name, hostname, sy_snum, sy_pnum, discoverymethod, disc_year, disc_facility, pl_controv_flag, pl_orbper, pl_orbsmax, pl_rade, pl_bmasse, pl_orbeccen, pl_eqt, st_spectype, st_teff, st_rad, st_mass, ra, dec, sy_vmag
         FROM pscomppars
     """
     # Execute the query
