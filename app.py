@@ -110,6 +110,37 @@ def generate_response(user_input, relevant_context="", references=[], max_tokens
     
     return response.choices[0].message.content.strip()
 
+def generate_data_insights(user_input, exoplanet_data, max_tokens=250, temperature=0.3):
+    """
+    Generate insights by passing the user's input along with the exoplanet data to GPT-4.
+    """
+    # Convert the dataframe to a readable format for GPT (e.g., CSV-style text)
+    data_as_text = exoplanet_data.to_csv(index=False)  # CSV-style for better readability
+
+    # Create a prompt with the user query and the data sample
+    insights_prompt = (
+        f"Analyze the following user query and provide relevant insights based on the provided exoplanet data.\n\n"
+        f"User Query: {user_input}\n\n"
+        f"Exoplanet Data:\n{data_as_text}\n\n"
+        f"Please provide insights that are relevant to the user's query."
+    )
+    
+    # Call GPT-4 to generate insights based on the data and user input
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an expert in analyzing astronomical data and generating insights."},
+            {"role": "user", "content": insights_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature
+    )
+    
+    # Extract and return GPT-4's insights
+    data_insights = response.choices[0].message.content.strip()
+    return data_insights
+
+
 def export_to_word(response_content):
     doc = Document()
     doc.add_heading('AI Generated SCDD', 0)
@@ -139,6 +170,12 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
 
     # Fetch exoplanet data
     exoplanet_data = fetch_exoplanet_data()
+
+    # Generate insights based on the user query and exoplanet data
+    data_insights = generate_data_insights(user_input, exoplanet_data)
+
+    # Combine the response and the data insights
+    full_response = f"{response}\n\nInsights from Existing Data: {data_insights}"
     
     # Embed Miro iframe
     iframe_html = """
@@ -173,7 +210,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         <button class="mapify-button">Create Mind Map on Mapify</button>
     </a>
     """
-    return response, iframe_html, mapify_button_html, word_doc_path, exoplanet_data
+    return full_response, iframe_html, mapify_button_html, word_doc_path, exoplanet_data
 
 iface = gr.Interface(
     fn=chatbot,
