@@ -64,21 +64,18 @@ def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
     
     return extracted_keywords
 
-def fetch_nasa_ads_references(user_input):
+def fetch_nasa_ads_references(prompt):
     try:
-        # Step 1: Extract keywords using GPT (assuming you have this function)
-        keywords = extract_keywords_with_gpt(user_input)
+        # Use the entire prompt for the query
+        simplified_query = prompt
 
-        # Step 2: Build a query using the extracted keywords
-        simplified_query = keywords  # Use keywords as the query
-
-        # Step 3: Query NASA ADS for relevant papers
+        # Query NASA ADS for relevant papers
         papers = ADS.query_simple(simplified_query)
-
+        
         if not papers or len(papers) == 0:
             return [("No results found", "N/A", "N/A")]
         
-        # Step 4: Extract title, authors, and bibcode from the papers
+        # Include authors in the references
         references = [
             (
                 paper['title'][0], 
