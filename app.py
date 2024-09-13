@@ -22,8 +22,14 @@ client = OpenAI(api_key=api_key)
 # Set up NASA ADS token
 ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
 
-# Define a system message to introduce Exos
-system_message = "You are ExosAI, a helpful assistant specializing in Astrophysics and Exoplanet research. Provide detailed and accurate responses related to Astrophysics and Exoplanet research."
+# Define system message with instructions
+system_message = """
+You are ExosAI, a helpful assistant specializing in Exoplanet research. 
+Your goal is to provide detailed, structured answers by following these guidelines:
+- The central topic branches out into 3 science objectives. 
+- Each science objective branches out into 2 physical parameters, and each physical parameter branches out into 2 observables. 
+- Include details, provide scientific references, and make recommendations for observation parameters like wavelength, resolution, etc.
+"""
 
 def encode_text(text):
     inputs = bi_tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
@@ -110,7 +116,7 @@ def generate_response(user_input, relevant_context="", references=[], max_tokens
     
     return response.choices[0].message.content.strip()
 
-def generate_data_insights(user_input, exoplanet_data, max_tokens=250, temperature=0.3):
+def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperature=0.3):
     """
     Generate insights by passing the user's input along with the exoplanet data to GPT-4.
     """
@@ -231,7 +237,7 @@ iface = gr.Interface(
         gr.File(label="Download SCDD", type="filepath"),
         gr.Dataframe(label="Exoplanet Data Table")
     ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.4a]",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.5a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
