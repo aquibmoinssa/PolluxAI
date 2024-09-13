@@ -44,30 +44,62 @@ def retrieve_relevant_context(user_input, context_texts):
     most_relevant_idx = np.argmax(similarities)
     return context_texts[most_relevant_idx]
 
+def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
+    # Define a prompt to ask GPT-4 to extract keywords and important terms
+    keyword_prompt = f"Extract the most important keywords, scientific concepts, and parameters from the following user query:\n\n{user_input}"
+    
+    # Call GPT-4 to extract keywords based on the user prompt
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an expert in identifying key scientific terms and concepts."},
+            {"role": "user", "content": keyword_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature
+    )
+    
+    # Extract the content from GPT-4's reply
+    extracted_keywords = response.choices[0].message.content.strip()
+    
+    return extracted_keywords
+
 def fetch_nasa_ads_references(prompt):
     try:
-        # Use the entire prompt for the query
-        simplified_query = prompt
+        # Step 1: Extract keywords using GPT (or another keyword extraction method)
+        keywords = extract_keywords_with_gpt(prompt)  # Assuming you have this function
 
-        # Query NASA ADS for relevant papers
+        # Step 2: Refine the query using the extracted keywords
+        simplified_query = keywords  # Or use the full prompt if no keyword extraction is done
+
+        # Step 3: Query NASA ADS for relevant papers
         papers = ADS.query_simple(simplified_query)
-        
+
         if not papers or len(papers) == 0:
-            return [("No results found", "N/A", "N/A")]
-        
-        # Include authors in the references
-        references = [
-            (
-                paper['title'][0], 
-                ", ".join(paper['author'][:3]) + (" et al." if len(paper['author']) > 3 else ""), 
-                paper['bibcode']
-            ) 
-            for paper in papers[:5]  # Limit to 5 references
-        ]
+            return [("No results found", "N/A", "N/A", "N/A", "N/A", "N/A")]
+
+        # Step 4: Extract references with title, authors, bibcode, DOI, journal, and publication date
+        references = []
+        for paper in papers[:5]:  # Limit to 5 references
+            title = paper['title'][0]
+            authors = ", ".join(paper['author'][:3]) + (" et al." if len(paper['author']) > 3 else "")
+            bibcode = paper['bibcode']
+
+            # Fetch DOI if available
+            doi = paper.get('doi', ['N/A'])[0]
+            doi_link = f"https://doi.org/{doi}" if doi != "N/A" else "N/A"
+
+            # Fetch journal and publication date
+            journal = paper.get('pub', 'Unknown Journal')
+            pubdate = paper.get('pubdate', 'Unknown Date')
+
+            # Add the extracted info to the list of references
+            references.append((title, authors, journal, pubdate, bibcode, doi_link))
+
         return references
-    
+
     except Exception as e:
-        return [("Error fetching references", str(e), "N/A")]
+        return [("Error fetching references", str(e), "N/A", "N/A", "N/A", "N/A")]
 
 def fetch_exoplanet_data():
     # Connect to NASA Exoplanet Archive TAP Service
@@ -110,7 +142,7 @@ def generate_response(user_input, relevant_context="", references=[], max_tokens
     if references:
         response_content = response.choices[0].message.content.strip()
         references_text = "\n\nADS References:\n" + "\n".join(
-            [f"- {title} by {authors} (Bibcode: {bibcode})" for title, authors, bibcode in references]
+            [f"- {title} by {authors}, {journal}, published on {pubdate} (Bibcode: {bibcode}) [DOI: {doi_link}]" for title, authors, journal, pubdate, bibcode, doi_link in references]
         )
         return f"{response_content}\n{references_text}"
     
