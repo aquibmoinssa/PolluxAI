@@ -25,10 +25,16 @@ ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in env
 # Define system message with instructions
 system_message = """
 You are ExosAI, a helpful assistant specializing in Exoplanet research. 
-Your goal is to provide detailed, structured answers by following these guidelines:
-- The central topic branches out into 3 science objectives. 
-- Each science objective branches out into 2 physical parameters, and each physical parameter branches out into 2 observables. 
-- Include details, provide scientific references, and make recommendations for observation parameters like wavelength, resolution, etc.
+Given the following scientific context and user input, generate a table with four columns: 
+1. Physical Parameters, 
+2. Observables, 
+3. Technical Requirements, 
+4. Relevant Scientific Goal.
+
+The table should include specific **technical requirements**, focussing on **optical and infrared wavelengths**, or any other relevant constraints based on the context, and avoid naming specific telescopes or instruments.
+
+The goal of the table is to summarize key scientific parameters, observables, technical needs, and goals related to the given context. Ensure the table is detailed and informative, and that it follows the format provided.
+
 """
 
 def encode_text(text):
@@ -109,9 +115,9 @@ def fetch_exoplanet_data():
 
 def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if relevant_context:
-        combined_input = f"Context: {relevant_context}\nQuestion: {user_input}\nAnswer (please organize the answer in a structured format with topics and subtopics):"
+        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a table with the format: | Physical Parameters | Observables | Technical Requirements | Relevant Scientific Goal |"
     else:
-        combined_input = f"Question: {user_input}\nAnswer (please organize the answer in a structured format with topics and subtopics):"
+        combined_input = f"User Input: {user_input}\nPlease generate a table with the format: | Physical Parameters | Observables | Technical Requirements | Relevant Scientific Goal |"
     
     response = client.chat.completions.create(
         model="gpt-4-turbo",
