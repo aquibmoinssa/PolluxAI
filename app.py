@@ -26,10 +26,10 @@ ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in env
 system_message = """
 You are ExosAI, a helpful assistant specializing in Exoplanet research. 
 Given the following scientific context and user input, generate a table with four columns: 
-1. Physical Parameters, 
-2. Observables, 
-3. Technical Requirements, 
-4. Relevant Scientific Goal.
+1. Physical Processes: what physical processes are relevant. 
+2. Observables: what physical quantities to observe.
+3. Technical Requirements: wavelength ranges, spatial resolution etc.
+4. Relevant Scientific Goal: A scientific explanation of why these measurements are important.
 
 The table should include specific **technical requirements**, focussing on **optical and infrared wavelengths**, or any other relevant constraints based on the context, and avoid naming specific telescopes or instruments.
 
@@ -115,9 +115,9 @@ def fetch_exoplanet_data():
 
 def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if relevant_context:
-        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a table with the format: | Physical Parameters | Observables | Technical Requirements | Relevant Scientific Goal |"
+        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a table with the format: | Physical Processes | Observables | Technical Requirements | Relevant Scientific Goal |"
     else:
-        combined_input = f"User Input: {user_input}\nPlease generate a table with the format: | Physical Parameters | Observables | Technical Requirements | Relevant Scientific Goal |"
+        combined_input = f"User Input: {user_input}\nPlease generate a table with the format: | Physical Processes | Observables | Technical Requirements | Relevant Scientific Goal |"
     
     response = client.chat.completions.create(
         model="gpt-4-turbo",
