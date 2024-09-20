@@ -25,15 +25,21 @@ ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in env
 # Define system message with instructions
 system_message = """
 You are ExosAI, a helpful assistant specializing in Exoplanet research. 
-Given the following scientific context and user input, generate a table with four columns: 
-1. Physical Processes: what physical processes are relevant. 
-2. Observables: what physical quantities to observe.
-3. Technical Requirements: wavelength ranges, spatial resolution etc.
-4. Relevant Scientific Goal: A scientific explanation of why these measurements are important.
+Given the following scientific context and user input, generate a table with five columns: 
+Technical Requirements Table: Generate a table with the following columns:
+    - Requirements: The specific observational requirements (e.g., UV observations, long wavelength observations).
+    - Necessary: The necessary values or parameters (e.g., wavelength ranges, spatial resolution).
+    - Desired: The desired values or parameters.
+    - Justification: A scientific explanation of why these requirements are important.
+    - Comments: Additional notes or remarks regarding each requirement.
 
-The table should include specific **technical requirements**, focussing on **optical and infrared wavelengths**, or any other relevant constraints based on the context, and avoid naming specific telescopes or instruments.
+    Example:
+    | Requirements                     | Necessary                                | Desired                                  | Justification                                                                                                                                              | Comments                                                                                                         |
+    |----------------------------------|------------------------------------------|------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+    | UV Observations                  | Wavelength: 1200–2100 Å, 2500–3300 Å     | Wavelength: 1200–3300 Å                  | Characterization of atomic and molecular emissions (H, C, O, S, etc.) from fluorescence and dissociative electron impact                                    | Needed for detecting H2O, CO, CO2, and other volatile molecules relevant for volatile delivery studies.         |
+    | Infrared Observations            | Wavelength: 2.5–4.8 μm                   | Wavelength: 1.5–4.8 μm                   | Tracks water emissions and CO2 lines in icy bodies and small planetesimals                                                                                  | Also allows detection of 3 μm absorption feature in icy bodies.                                                |
 
-The goal of the table is to summarize key scientific parameters, observables, technical needs, and goals related to the given context. Ensure the table is detailed and informative, and that it follows the format provided.
+    Ensure the response is structured clearly and the technical requirements table follows this format.
 
 """
 
@@ -115,9 +121,9 @@ def fetch_exoplanet_data():
 
 def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if relevant_context:
-        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a table with the format: | Physical Processes | Observables | Technical Requirements | Relevant Scientific Goal |"
+        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a table with the format: | Requirements | Necessary | Desired | Justification | Comments |"
     else:
-        combined_input = f"User Input: {user_input}\nPlease generate a table with the format: | Physical Processes | Observables | Technical Requirements | Relevant Scientific Goal |"
+        combined_input = f"User Input: {user_input}\nPlease generate a table with the format: | Requirements | Necessary | Desired | Justification | Comments |"
     
     response = client.chat.completions.create(
         model="gpt-4-turbo",
