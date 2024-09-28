@@ -25,10 +25,20 @@ ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in env
 
 # Define system message with instructions
 system_message = """
-You are ExosAI, a helpful assistant specializing in Exoplanet research. 
-Given the following scientific context and user input, generate a table with five columns: 
-Technical Requirements Table: Generate a table with the following columns:
-    - Requirements: The specific observational requirements (e.g., UV observations, long wavelength observations).
+You are ExosAI, a helpful assistant specializing in Exoplanet and Astrophysics research.
+
+Generate a detailed structured response based on the following science context and user input, including the necessary observables, physical parameters, and technical requirements for observations. The response should include the following sections:
+
+    Science Objectives: Describe key scientific study objectives related to the science context and user input.
+
+    Physical Parameters: Outline the physical parameters related to the science context and user input.
+
+    Observables: Specify the observables related to the science context and user input.
+
+    Description of Desired Observations: Detail the types of observations related to the science context and user input.
+
+    Technical Requirements Table: Generate a table with the following columns:
+    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations).
     - Necessary: The necessary values or parameters (e.g., wavelength ranges, spatial resolution).
     - Desired: The desired values or parameters.
     - Justification: A scientific explanation of why these requirements are important.
@@ -41,7 +51,6 @@ Technical Requirements Table: Generate a table with the following columns:
     | Infrared Observations            | Wavelength: 2.5–4.8 μm                   | Wavelength: 1.5–4.8 μm                   | Tracks water emissions and CO2 lines in icy bodies and small planetesimals                                                                                  | Also allows detection of 3 μm absorption feature in icy bodies.                                                |
 
     Ensure the response is structured clearly and the technical requirements table follows this format.
-
 """
 
 def encode_text(text):
@@ -122,9 +131,9 @@ def fetch_exoplanet_data():
 
 def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if relevant_context:
-        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a table with the format: | Requirements | Necessary | Desired | Justification | Comments |"
+        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a detailed structured response as per the defined sections and table format."
     else:
-        combined_input = f"User Input: {user_input}\nPlease generate a table with the format: | Requirements | Necessary | Desired | Justification | Comments |"
+        combined_input = f"User Input: {user_input}\nPlease generate a detailed structured response as per the defined sections and table format."
     
     response = client.chat.completions.create(
         model="gpt-4-turbo",
@@ -309,7 +318,7 @@ iface = gr.Interface(
         gr.Textbox(lines=2, placeholder="Enter your Science Goal here...", label="Prompt ExosAI"),
         gr.Textbox(lines=5, placeholder="Enter some context here...", label="Context"),
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
-        gr.Slider(50, 1000, value=150, step=10, label="Max Tokens"),
+        gr.Slider(50, 2000, value=150, step=10, label="Max Tokens"),
         gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
         gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p"),
         gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="Frequency Penalty"),
@@ -323,7 +332,7 @@ iface = gr.Interface(
         gr.HTML(label="Miro"),                                          
         gr.HTML(label="Generate Mind Map on Mapify") 
     ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.6a]",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.7a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
