@@ -310,7 +310,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         <button class="mapify-button">Create Mind Map on Mapify</button>
     </a>
     """
-    return full_response, extracted_table_df, word_doc_path, exoplanet_data, miro_html, mapify_button_html
+    return full_response, extracted_table_df, word_doc_path, exoplanet_data, iframe_html, mapify_button_html
 
 iface = gr.Interface(
     fn=chatbot,
