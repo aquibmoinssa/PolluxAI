@@ -5,3 +5,4 @@ openai
 python-docx
 astroquery
 pyvo
+pandas
