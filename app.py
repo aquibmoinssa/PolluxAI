@@ -301,7 +301,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         <button class="mapify-button">Create Mind Map on Mapify</button>
     </a>
     """
-    return full_response, iframe_html, mapify_button_html, word_doc_path, exoplanet_data, extracted_table_df
+    return full_response, extracted_table_df, word_doc_path, exoplanet_data, miro_html, mapify_button_html
 
 iface = gr.Interface(
     fn=chatbot,
@@ -316,14 +316,14 @@ iface = gr.Interface(
         gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
     ],
     outputs=[
-        gr.Textbox(label="ExosAI finds..."),
-        gr.HTML(label="Miro"),
-        gr.HTML(label="Generate Mind Map on Mapify"),
-        gr.File(label="Download SCDD", type="filepath"),
-        gr.Dataframe(label="Exoplanet Data Table"),
-        gr.Dataframe(label="Extracted Table from GPT-4 Response")
+        gr.Textbox(label="ExosAI finds..."),                           
+        gr.Dataframe(label="SC Requirements Table"),      
+        gr.File(label="Download SCDD", type="filepath"),                
+        gr.Dataframe(label="Exoplanet Data Table"),                     
+        gr.HTML(label="Miro"),                                          
+        gr.HTML(label="Generate Mind Map on Mapify") 
     ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.5a]",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.6a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
