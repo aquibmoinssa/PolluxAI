@@ -9,6 +9,7 @@ import io
 import tempfile
 from astroquery.nasa_ads import ADS
 import pyvo as vo
+import pandas as pd
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -190,6 +191,48 @@ def export_to_word(response_content):
     
     return temp_file.name
 
+def extract_table_from_response(gpt_response):
+    # Split the response into lines
+    lines = gpt_response.strip().split("\n")
+    
+    # Find where the table starts and ends (based on the presence of pipes `|`)
+    table_lines = [line for line in lines if '|' in line]
+    
+    # If no table is found, return an empty string
+    if not table_lines:
+        return None
+    
+    # Find the first and last index of the table lines
+    first_table_index = lines.index(table_lines[0])
+    last_table_index = lines.index(table_lines[-1])
+    
+    # Extract only the table part
+    table_text = lines[first_table_index:last_table_index + 1]
+    
+    return table_text
+
+def gpt_response_to_dataframe(gpt_response):
+    # Extract the table text from the GPT response
+    table_lines = extract_table_from_response(gpt_response)
+    
+    # If no table found, return None or an empty DataFrame
+    if table_lines is None:
+        return pd.DataFrame()
+
+    # Find the separator line (line with dashes) to determine columns
+    sep_line_index = next(i for i, line in enumerate(table_lines) if set(line.strip()) == {'|'})
+
+    # Extract headers and rows
+    headers = [h.strip() for h in table_lines[sep_line_index - 1].split('|')[1:-1]]
+    rows = [
+        [cell.strip() for cell in row.split('|')[1:-1]]
+        for row in table_lines[sep_line_index + 1:]
+    ]
+
+    # Create DataFrame
+    df = pd.DataFrame(rows, columns=headers)
+    return df
+    
 def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if use_encoder and context:
         context_texts = context.split("\n")
@@ -211,6 +254,9 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
 
     # Generate insights based on the user query and exoplanet data
     data_insights = generate_data_insights(user_input, exoplanet_data)
+
+    # Extract and convert the table from the GPT-4 response into a DataFrame
+    extracted_table_df = gpt_response_to_dataframe(response)
 
     # Combine the response and the data insights
     full_response = f"{response}\n\nInsights from Existing Data: {data_insights}"
@@ -248,7 +294,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         <button class="mapify-button">Create Mind Map on Mapify</button>
     </a>
     """
-    return full_response, iframe_html, mapify_button_html, word_doc_path, exoplanet_data
+    return full_response, iframe_html, mapify_button_html, word_doc_path, exoplanet_data, extracted_table_df
 
 iface = gr.Interface(
     fn=chatbot,
@@ -267,7 +313,8 @@ iface = gr.Interface(
         gr.HTML(label="Miro"),
         gr.HTML(label="Generate Mind Map on Mapify"),
         gr.File(label="Download SCDD", type="filepath"),
-        gr.Dataframe(label="Exoplanet Data Table")
+        gr.Dataframe(label="Exoplanet Data Table"),
+        gr.Dataframe(label="Extracted Table from GPT-4 Response")
     ],
     title="ExosAI - NASA SMD SCDD AI Assistant [version-0.5a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
