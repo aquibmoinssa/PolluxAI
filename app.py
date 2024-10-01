@@ -199,20 +199,23 @@ def export_to_word(response_content):
     # Add a title (optional, you can remove this if not needed)
     doc.add_heading('AI Generated SCDD', 0)
 
-    # Split the response by sections (### is used to mark sections)
+    # Split the response into sections based on ### headings
     sections = response_content.split('### ')
     
     for section in sections:
         if section.strip():
-            # Only handle the "Technical Requirements Table" section with proper formatting
+            # Handle the "Technical Requirements Table" separately with proper formatting
             if section.startswith('Technical Requirements Table'):
                 doc.add_heading('Technical Requirements Table', level=1)
-                # Extract the table part from the section
-                table_lines = section.split('\n')[2:]
-                # Assuming the table is split by pipes "|", let's convert it to a Word table
+                
+                # Extract table lines
+                table_lines = section.split('\n')[2:]  # Start after the heading line
+                
+                # Check if it's an actual table (split lines by '|' symbol)
                 table_data = [line.split('|')[1:-1] for line in table_lines if '|' in line]
+                
                 if table_data:
-                    # Add the table to the document
+                    # Add table to the document
                     table = doc.add_table(rows=len(table_data), cols=len(table_data[0]))
                     table.style = 'Table Grid'
                     for i, row in enumerate(table_data):
@@ -221,15 +224,22 @@ def export_to_word(response_content):
                             cell.text = cell_text.strip()
                             # Apply text wrapping for each cell
                             cell._element.get_or_add_tcPr().append(parse_xml(r'<w:tcW w:w="2500" w:type="pct" ' + nsdecls('w') + '/>'))
+                
+                # Process any paragraphs that follow the table
+                paragraph_after_table = '\n'.join([line for line in table_lines if '|' not in line and line.strip()])
+                if paragraph_after_table:
+                    doc.add_paragraph(paragraph_after_table.strip())
+            
+            # Handle the "ADS References" section
             elif section.startswith('ADS References'):
-                # Add the ADS References section as plain text
                 doc.add_heading('ADS References', level=1)
-                references = section.split('\n')[1:]
+                references = section.split('\n')[1:]  # Skip the heading
                 for reference in references:
                     if reference.strip():
                         doc.add_paragraph(reference.strip())
+            
+            # Add all other sections as plain paragraphs
             else:
-                # For any other section, add the text as-is (no special formatting)
                 doc.add_paragraph(section.strip())
     
     # Save the document to a temporary file
