@@ -193,11 +193,19 @@ def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperatu
     return data_insights
 
 
-def export_to_word(response_content):
+def export_to_word(response_content, subdomain_definition, science_goal):
     doc = Document()
     
     # Add a title (optional, you can remove this if not needed)
     doc.add_heading('AI Generated SCDD', 0)
+
+    # Insert the Subdomain Definition at the top
+    doc.add_heading('Subdomain Definition:', level=1)
+    doc.add_paragraph(subdomain_definition)
+
+    # Insert the Science Goal at the top
+    doc.add_heading('Science Goal:', level=1)
+    doc.add_paragraph(science_goal)
 
     # Split the response into sections based on ### headings
     sections = response_content.split('### ')
@@ -311,7 +319,7 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
     response = generate_response(user_input, relevant_context, references, max_tokens, temperature, top_p, frequency_penalty, presence_penalty)
 
     # Export the response to a Word document
-    word_doc_path = export_to_word(response)
+    word_doc_path = export_to_word(response, user_input, context)
 
     # Fetch exoplanet data
     exoplanet_data = fetch_exoplanet_data()
