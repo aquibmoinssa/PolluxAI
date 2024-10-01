@@ -221,6 +221,13 @@ def export_to_word(response_content):
                             cell.text = cell_text.strip()
                             # Apply text wrapping for each cell
                             cell._element.get_or_add_tcPr().append(parse_xml(r'<w:tcW w:w="2500" w:type="pct" ' + nsdecls('w') + '/>'))
+            elif section.startswith('ADS References'):
+                # Add the ADS References section as plain text
+                doc.add_heading('ADS References', level=1)
+                references = section.split('\n')[1:]
+                for reference in references:
+                    if reference.strip():
+                        doc.add_paragraph(reference.strip())
             else:
                 # For any other section, add the text as-is (no special formatting)
                 doc.add_paragraph(section.strip())
@@ -346,8 +353,8 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
 iface = gr.Interface(
     fn=chatbot,
     inputs=[
-        gr.Textbox(lines=2, placeholder="Enter your Science Goal here...", label="Prompt ExosAI"),
-        gr.Textbox(lines=5, placeholder="Enter some context here...", label="Context"),
+        gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition"),
+        gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal"),
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
         gr.Slider(50, 2000, value=150, step=10, label="Max Tokens"),
         gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
