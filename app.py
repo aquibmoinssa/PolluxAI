@@ -196,7 +196,7 @@ def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperatu
 def export_to_word(response_content):
     doc = Document()
     
-    # Add a title
+    # Add a title (optional, you can remove this if not needed)
     doc.add_heading('AI Generated SCDD', 0)
 
     # Split the response by sections (### is used to mark sections)
@@ -204,32 +204,8 @@ def export_to_word(response_content):
     
     for section in sections:
         if section.strip():
-            # Check for subsections based on section titles
-            if section.startswith('Science Objectives'):
-                doc.add_heading('Science Objectives', level=1)
-                objectives = section.split('\n')[1:]
-                for objective in objectives:
-                    if objective.strip().startswith('1.') or objective.strip().startswith('-'):
-                        doc.add_paragraph(objective.strip(), style='List Number')
-            elif section.startswith('Physical Parameters'):
-                doc.add_heading('Physical Parameters', level=1)
-                params = section.split('\n')[1:]
-                for param in params:
-                    if param.strip():
-                        doc.add_paragraph(param.strip(), style='Normal')
-            elif section.startswith('Observables'):
-                doc.add_heading('Observables', level=1)
-                observables = section.split('\n')[1:]
-                for observable in observables:
-                    if observable.strip():
-                        doc.add_paragraph(observable.strip(), style='Normal')
-            elif section.startswith('Description of Desired Observations'):
-                doc.add_heading('Description of Desired Observations', level=1)
-                observations = section.split('\n')[1:]
-                for obs in observations:
-                    if obs.strip().startswith('1.') or obs.strip().startswith('-'):
-                        doc.add_paragraph(obs.strip(), style='List Number')
-            elif section.startswith('Technical Requirements Table'):
+            # Only handle the "Technical Requirements Table" section with proper formatting
+            if section.startswith('Technical Requirements Table'):
                 doc.add_heading('Technical Requirements Table', level=1)
                 # Extract the table part from the section
                 table_lines = section.split('\n')[2:]
@@ -245,13 +221,10 @@ def export_to_word(response_content):
                             cell.text = cell_text.strip()
                             # Apply text wrapping for each cell
                             cell._element.get_or_add_tcPr().append(parse_xml(r'<w:tcW w:w="2500" w:type="pct" ' + nsdecls('w') + '/>'))
-            elif section.startswith('ADS References'):
-                doc.add_heading('ADS References', level=1)
-                references = section.split('\n')[1:]
-                for reference in references:
-                    if reference.strip():
-                        doc.add_paragraph(reference.strip(), style='Normal')
-
+            else:
+                # For any other section, add the text as-is (no special formatting)
+                doc.add_paragraph(section.strip())
+    
     # Save the document to a temporary file
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
     doc.save(temp_file.name)
@@ -390,7 +363,7 @@ iface = gr.Interface(
         gr.HTML(label="Miro"),                                          
         gr.HTML(label="Generate Mind Map on Mapify") 
     ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.7a]",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.8a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
