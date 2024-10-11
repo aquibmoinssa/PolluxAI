@@ -30,30 +30,22 @@ ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in env
 # Define system message with instructions
 system_message = """
 You are ExosAI, a helpful assistant specializing in Exoplanet and Astrophysics research.
-
 Generate a detailed structured response based on the following science context and user input, including the necessary observables, physical parameters, and technical requirements for observations. The response should include the following sections:
-
     Science Objectives: Describe key scientific study objectives related to the science context and user input.
-
     Physical Parameters: Outline the physical parameters related to the science context and user input.
-
     Observables: Specify the observables related to the science context and user input.
-
     Description of Desired Observations: Detail the types of observations related to the science context and user input.
-
     Technical Requirements Table: Generate a table with the following columns:
-    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations. No radio or radar).
+    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations).
     - Necessary: The necessary values or parameters (e.g., wavelength ranges, spatial resolution).
     - Desired: The desired values or parameters.
     - Justification: A scientific explanation of why these requirements are important.
     - Comments: Additional notes or remarks regarding each requirement.
-
     Example:
     | Requirements                     | Necessary                                | Desired                                  | Justification                                                                                                                                              | Comments                                                                                                         |
     |----------------------------------|------------------------------------------|------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
     | UV Observations                  | Wavelength: 1200–2100 Å, 2500–3300 Å     | Wavelength: 1200–3300 Å                  | Characterization of atomic and molecular emissions (H, C, O, S, etc.) from fluorescence and dissociative electron impact                                    | Needed for detecting H2O, CO, CO2, and other volatile molecules relevant for volatile delivery studies.         |
     | Infrared Observations            | Wavelength: 2.5–4.8 μm                   | Wavelength: 1.5–4.8 μm                   | Tracks water emissions and CO2 lines in icy bodies and small planetesimals                                                                                  | Also allows detection of 3 μm absorption feature in icy bodies.                                                |
-
     Ensure the response is structured clearly and the technical requirements table follows this format.
 """
 
@@ -62,13 +54,54 @@ def encode_text(text):
     outputs = bi_model(**inputs)
     return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
 
-def retrieve_relevant_context(user_input, context_texts):
+def get_chunks(text, chunk_size=300):
+    """
+    Split a long piece of text into smaller chunks of approximately 'chunk_size' characters.
+    """
+    if not text.strip():
+        raise ValueError("The provided context is empty or blank.")
+    
+    # Split the text into chunks of approximately 'chunk_size' characters
+    chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+    return chunks
+
+def retrieve_relevant_context(user_input, context_texts, chunk_size=300, similarity_threshold=0.3):
+    """
+    Split the context text into smaller chunks, find the most relevant chunk
+    using cosine similarity, and return the most relevant chunk.
+    If no chunk meets the similarity threshold, return a fallback message.
+    """
+    # Check if the context is empty or just whitespace
+    if not context_texts.strip():
+        return "Error: Context is empty or improperly formatted.", None
+    
+    # Split the long context text into chunks using the chunking function
+    context_chunks = get_chunks(context_texts, chunk_size)
+    
+    # Handle single context case
+    if len(context_chunks) == 1:
+        return context_chunks[0], 1.0  # Return the single chunk with perfect similarity
+    
+    # Encode the user input to create a query embedding
     user_embedding = encode_text(user_input).reshape(1, -1)
-    context_embeddings = np.array([encode_text(text) for text in context_texts])
-    context_embeddings = context_embeddings.reshape(len(context_embeddings), -1)
-    similarities = cosine_similarity(user_embedding, context_embeddings).flatten()
+    
+    # Encode all context chunks to create embeddings
+    chunk_embeddings = np.array([encode_text(chunk) for chunk in context_chunks])
+    
+    # Compute cosine similarity between the user input and each chunk
+    similarities = cosine_similarity(user_embedding, chunk_embeddings).flatten()
+    
+    # Check if any similarity scores are above the threshold
+    if max(similarities) < similarity_threshold:
+        return "No relevant context found for the user input.", None
+    
+    # Identify the most relevant chunk based on the highest cosine similarity score
     most_relevant_idx = np.argmax(similarities)
-    return context_texts[most_relevant_idx]
+    most_relevant_chunk = context_chunks[most_relevant_idx]
+    
+    # Return the most relevant chunk and the similarity score
+    return most_relevant_chunk
+
 
 def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
     # Define a prompt to ask GPT-4 to extract keywords and important terms
@@ -307,7 +340,7 @@ def gpt_response_to_dataframe(gpt_response):
     
 def chatbot(user_input, context="", subdomain="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if use_encoder and context:
-        context_texts = context.split("\n")
+        context_texts = context
         relevant_context = retrieve_relevant_context(user_input, context_texts)
     else:
         relevant_context = ""
@@ -389,7 +422,7 @@ iface = gr.Interface(
         gr.HTML(label="Miro"),                                          
         gr.HTML(label="Generate Mind Map on Mapify") 
     ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.8a]",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.9a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
