@@ -42,7 +42,7 @@ Generate a detailed structured response based on the following science context a
     Description of Desired Observations: Detail the types of observations related to the science context and user input.
 
     Technical Requirements Table: Generate a table with the following columns:
-    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations).
+    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations. No radio or radar).
     - Necessary: The necessary values or parameters (e.g., wavelength ranges, spatial resolution).
     - Desired: The desired values or parameters.
     - Justification: A scientific explanation of why these requirements are important.
@@ -305,7 +305,7 @@ def gpt_response_to_dataframe(gpt_response):
     df = pd.DataFrame(rows, columns=headers)
     return df
     
-def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
+def chatbot(user_input, context="", subdomain="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if use_encoder and context:
         context_texts = context.split("\n")
         relevant_context = retrieve_relevant_context(user_input, context_texts)
@@ -313,13 +313,13 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
         relevant_context = ""
 
     # Fetch NASA ADS references using the full prompt
-    references = fetch_nasa_ads_references(user_input)
+    references = fetch_nasa_ads_references(subdomain)
 
     # Generate response from GPT-4
     response = generate_response(user_input, relevant_context, references, max_tokens, temperature, top_p, frequency_penalty, presence_penalty)
 
     # Export the response to a Word document
-    word_doc_path = export_to_word(response, user_input, context)
+    word_doc_path = export_to_word(response, subdomain, user_input)
 
     # Fetch exoplanet data
     exoplanet_data = fetch_exoplanet_data()
@@ -371,8 +371,9 @@ def chatbot(user_input, context="", use_encoder=False, max_tokens=150, temperatu
 iface = gr.Interface(
     fn=chatbot,
     inputs=[
-        gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition"),
         gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal"),
+        gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context"),
+        gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition"),
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
         gr.Slider(50, 2000, value=150, step=10, label="Max Tokens"),
         gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
