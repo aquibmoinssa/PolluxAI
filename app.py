@@ -45,7 +45,7 @@ Generate a **detailed and structured** response based on the given **science con
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
 - **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**. **Ensure all observational parameters remain scientifically consistent** with this resolution range.
 
-Example table:
+#### **Table Format Example** (Do NOT copy verbatim; generate based on the science context):
 
 | Requirements         | Necessary Values                      | Desired Values                        | Justification                                                                 | Comments                                      |
 |---------------------|------------------------------------|--------------------------------------|----------------------------------------------------------------------------|----------------------------------------------|
@@ -53,7 +53,9 @@ Example table:
 | Infrared Observations | Wavelength: 2.5–3.0 μm         | Wavelength: 2.0–3.0 μm               | Tracks water/CO2 in icy bodies and planetesimals                         | Enables detection of the 3 μm absorption feature in icy bodies |
 | Spectroscopy | Spectral Resolution: R ≥ 10,000 | Spectral Resolution: R = 50,000 | Necessary for resolving fine spectral features of exoplanetary atmospheres | Ensures accurate molecular composition analysis |
 
-Ensure the response is **structured, clear, and follows this format** for consistency. **All included parameters must be logically consistent with each other.**
+**Use this table format as a guideline, but generate a new table dynamically based on the input.** Do not copy the example directly. Ensure that all values align with the provided constraints and exclusions.
+
+Ensure the response is **structured, clear, and follows this format** for consistency. **All included parameters must be scientifically consistent with each other.**
 
 """
 
