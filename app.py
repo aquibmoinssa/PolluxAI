@@ -187,7 +187,7 @@ def generate_response(user_input, relevant_context="", references=[], max_tokens
         combined_input = f"User Input: {user_input}\nPlease generate a detailed structured response as per the defined sections and table format."
     
     response = client.chat.completions.create(
-        model="gpt-4-turbo",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": system_message},
             {"role": "user", "content": combined_input}
