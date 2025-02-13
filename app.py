@@ -56,7 +56,6 @@ Generate a **detailed and structured** response based on the given **science con
 **Use this table format as a guideline, but generate a new table dynamically based on the input.** Do not copy the example directly. Ensure that all values align with the provided constraints and exclusions.
 
 Ensure the response is **structured, clear, and follows this format** for consistency. **All included parameters must be scientifically consistent with each other.**
-
 """
 
 def encode_text(text):
