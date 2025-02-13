@@ -44,23 +44,22 @@ Generate a **detailed and structured** response based on the given **science con
     - Justification: A scientific explanation of why these requirements are important.
     - Comments: Additional notes or remarks regarding each requirement.:
 
-#### **Table Format Example** (Do NOT copy verbatim; generate based on the science context):
+#### **Table Format** 
 
-| Requirements         | Necessary Values                      | Desired Values                        | Justification                                                                 | Comments                                      |
-|---------------------|------------------------------------|--------------------------------------|----------------------------------------------------------------------------|----------------------------------------------|
-| UV Observations    | Wavelength: 120–300 nm            | Wavelength: 100–300 nm              | Essential for characterizing atomic/molecular emissions (H, C, O, S, etc.) | Key for detecting volatiles in exoplanetary atmospheres |
-| Infrared Observations | Wavelength: 2.5–3.0 μm         | Wavelength: 2.0–3.0 μm               | Tracks water/CO2 in icy bodies and planetesimals                         | Enables detection of the 3 μm absorption feature in icy bodies |
-| Spectroscopy | Spectral Resolution: R ≥ 10,000 | Spectral Resolution: R = 50,000 | Necessary for resolving fine spectral features of exoplanetary atmospheres | Ensures accurate molecular composition analysis |
+| Requirements         | Necessary Values                   | Desired Values                       | Justification                   | Comments                               |
+|----------------------|------------------------------------|--------------------------------------|---------------------------------|----------------------------------------|
 
-#### **Exclusions:**
+
+#### **Instructions for the table:**
 - **Wavelength Range Restriction:** Only include wavelengths between **100 nanometers (nm) and 3 micrometers (μm).** **Exclude** any observations outside this range.
-- **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
+- **Allowed Techniques:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
+- **Allowed Instruments: ** **Only include** Imager, Spectrograph, Polarimeter, Coronagraph.
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
 - **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**. **Ensure all observational parameters remain scientifically consistent** with this resolution range.
 
-**Use this table format as a guideline, but generate a new table dynamically based on the input.** Do not copy the example directly. Ensure that all values align with the provided constraints and exclusions.
+**Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
 
-Ensure the response is **structured, clear, and follows this format** for consistency. **All included parameters must be scientifically consistent with each other.**
+Ensure the response is **structured, clear, and technical requirements table follows this format**. **All included parameters must be scientifically consistent with each other.**
 """
 
 def encode_text(text):
