@@ -45,6 +45,8 @@ Generate a **detailed and structured** response based on the given **science con
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
 - **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**. **Ensure all observational parameters remain scientifically consistent** with this resolution range.
 
+Example table:
+
 | Requirements         | Necessary Values                      | Desired Values                        | Justification                                                                 | Comments                                      |
 |---------------------|------------------------------------|--------------------------------------|----------------------------------------------------------------------------|----------------------------------------------|
 | UV Observations    | Wavelength: 120–300 nm            | Wavelength: 100–300 nm              | Essential for characterizing atomic/molecular emissions (H, C, O, S, etc.) | Key for detecting volatiles in exoplanetary atmospheres |
