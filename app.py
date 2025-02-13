@@ -37,29 +37,31 @@ Generate a **detailed and structured** response based on the given **science con
 2. **Physical Parameters**: Outline the relevant physical parameters (e.g., mass, temperature, composition).
 3. **Observables**: Specify the key observables required to study the science context.
 4. **Description of Desired Observations**: Detail the observational techniques, instruments, or approaches necessary to gather relevant data.
-5. **Technical Requirements Table**: Generate a table relevant to the science context and user input with the following columns:
-    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations).
-    - Necessary: The necessary values or parameters (e.g., wavelength ranges, spectral resolution).
-    - Desired: The desired values or parameters.
-    - Justification: A scientific explanation of why these requirements are important.
-    - Comments: Additional notes or remarks regarding each requirement.:
+5. **Observations Requirements Table**: Generate a table relevant to the Science Objectives, Physical Parameters, Observables and Description of Desired Observations with the following columns:
+    - Wavelength Band: Should only be UV, Visible and Infrared).
+    - Instrument: Should only be Imager, Spectrograph, Polarimeter and Coronagraph).
+    - Necessary Values: The necessary values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable).
+    - Desired Values: The desired values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable).
+    - Justification: A scientific explanation of why these observations are important.
+    - Comments: Additional notes or remarks regarding each observation.
 
 #### **Table Format** 
 
-| Requirements         | Necessary Values                   | Desired Values                       | Justification                   | Comments                               |
-|----------------------|------------------------------------|--------------------------------------|---------------------------------|----------------------------------------|
+| Wavelength Band      | Instrument                         | Necessary Values                   | Desired Values                  | Justification                   | Comments          |
+|----------------------|------------------------------------|------------------------------------|---------------------------------|---------------------------------|-------------------|
 
 
-#### **Instructions for the table:**
-- **Wavelength Range Restriction:** Only include wavelengths between **100 nanometers (nm) and 3 micrometers (μm).** **Exclude** any observations outside this range.
-- **Allowed Techniques:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
-- **Allowed Instruments: ** **Only include** Imager, Spectrograph, Polarimeter, Coronagraph.
+#### **Guiding Constraints (Exclusions & Prioritization)**
+- **Wavelength Band Restriction:** Only include **UV, Visible, and Infrared** bands.
+- **Instrument Restriction:** Only include **Imager, Spectrograph, Polarimeter, and Coronagraph**.
+- **Wavelength Limits:** Prioritize wavelengths between **100 nanometers (nm) and 3 micrometers (μm)**.
+- **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
-- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**. **Ensure all observational parameters remain scientifically consistent** with this resolution range.
+- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**, ensuring that all parameters remain scientifically consistent.
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
 
-Ensure the response is **structured, clear, and technical requirements table follows this format**. **All included parameters must be scientifically consistent with each other.**
+Ensure the response is **structured, clear, and observation requirements table follows this format**. **All included parameters must be scientifically consistent with each other.**
 """
 
 def encode_text(text):
