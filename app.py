@@ -37,7 +37,7 @@ Generate a **detailed and structured** response based on the given **science con
 2. **Physical Parameters**: Outline the relevant physical parameters (e.g., mass, temperature, composition).
 3. **Observables**: Specify the key observables required to study the science context.
 4. **Description of Desired Observations**: Detail the observational techniques, instruments, or approaches necessary to gather relevant data.
-5. **Observations Requirements Table**: Generate a table relevant to the Science Objectives, Physical Parameters, Observables and Description of Desired Observations with the following columns:
+5. **Observations Requirements Table**: Generate a table relevant to the Science Objectives, Physical Parameters, Observables and Description of Desired Observations with the following columns and at least 7 rows:
     - Wavelength Band: Should only be UV, Visible and Infrared).
     - Instrument: Should only be Imager, Spectrograph, Polarimeter and Coronagraph).
     - Necessary Values: The necessary values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable, contrast ratio where applicable).
