@@ -40,9 +40,9 @@ Generate a **detailed and structured** response based on the given **science con
 5. **Observations Requirements Table**: Generate a table relevant to the Science Objectives, Physical Parameters, Observables and Description of Desired Observations with the following columns:
     - Wavelength Band: Should only be UV, Visible and Infrared).
     - Instrument: Should only be Imager, Spectrograph, Polarimeter and Coronagraph).
-    - Necessary Values: The necessary values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable).
+    - Necessary Values: The necessary values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable, contrast ratio where applicable).
     - Desired Values: The desired values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable).
-    - Justification: A scientific explanation of why these observations are important.
+    - Justification: Detailed scientific explanation of why these observations are important for the science objectives.
     - Comments: Additional notes or remarks regarding each observation.
 
 #### **Table Format** 
@@ -260,9 +260,9 @@ def export_to_word(response_content, subdomain_definition, science_goal):
     
     for section in sections:
         if section.strip():
-            # Handle the "Technical Requirements Table" separately with proper formatting
-            if section.startswith('Technical Requirements Table'):
-                doc.add_heading('Technical Requirements Table', level=1)
+            # Handle the "Observations Requirements Table" separately with proper formatting
+            if section.startswith('Observations Requirements Table'):
+                doc.add_heading('Observations Requirements Table', level=1)
                 
                 # Extract table lines
                 table_lines = section.split('\n')[2:]  # Start after the heading line
