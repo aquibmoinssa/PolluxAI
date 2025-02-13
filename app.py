@@ -37,13 +37,12 @@ Generate a **detailed and structured** response based on the given **science con
 2. **Physical Parameters**: Outline the relevant physical parameters (e.g., mass, temperature, composition).
 3. **Observables**: Specify the key observables required to study the science context.
 4. **Description of Desired Observations**: Detail the observational techniques, instruments, or approaches necessary to gather relevant data.
-5. **Technical Requirements Table**: Summarize the essential and preferred observational parameters in the following table:
-
-#### **Exclusions:**
-- **Wavelength Range Restriction:** Only include wavelengths between **100 nanometers (nm) and 3 micrometers (μm).** **Exclude** any observations outside this range.
-- **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
-- **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
-- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**. **Ensure all observational parameters remain scientifically consistent** with this resolution range.
+5. **Technical Requirements Table**: Generate a table relevant to the science context and user input with the following columns:
+    - Requirements: The specific observational requirements (e.g., UV observations, Optical observations or Infrared observations).
+    - Necessary: The necessary values or parameters (e.g., wavelength ranges, spectral resolution).
+    - Desired: The desired values or parameters.
+    - Justification: A scientific explanation of why these requirements are important.
+    - Comments: Additional notes or remarks regarding each requirement.:
 
 #### **Table Format Example** (Do NOT copy verbatim; generate based on the science context):
 
@@ -52,6 +51,12 @@ Generate a **detailed and structured** response based on the given **science con
 | UV Observations    | Wavelength: 120–300 nm            | Wavelength: 100–300 nm              | Essential for characterizing atomic/molecular emissions (H, C, O, S, etc.) | Key for detecting volatiles in exoplanetary atmospheres |
 | Infrared Observations | Wavelength: 2.5–3.0 μm         | Wavelength: 2.0–3.0 μm               | Tracks water/CO2 in icy bodies and planetesimals                         | Enables detection of the 3 μm absorption feature in icy bodies |
 | Spectroscopy | Spectral Resolution: R ≥ 10,000 | Spectral Resolution: R = 50,000 | Necessary for resolving fine spectral features of exoplanetary atmospheres | Ensures accurate molecular composition analysis |
+
+#### **Exclusions:**
+- **Wavelength Range Restriction:** Only include wavelengths between **100 nanometers (nm) and 3 micrometers (μm).** **Exclude** any observations outside this range.
+- **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
+- **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
+- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**. **Ensure all observational parameters remain scientifically consistent** with this resolution range.
 
 **Use this table format as a guideline, but generate a new table dynamically based on the input.** Do not copy the example directly. Ensure that all values align with the provided constraints and exclusions.
 
