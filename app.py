@@ -57,7 +57,9 @@ Generate a **detailed and structured** response based on the given **science con
 - **Wavelength Limits:** Prioritize wavelengths between **100 nanometers (nm) and 3 micrometers (μm)**.
 - **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
-- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**, ensuring that all parameters remain scientifically consistent.
+- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**.
+- **Contrast Ratio:** Limit contrast ratio to the range **10^4 - 10^6**.
+- **Ensure that all parameters remain scientifically consistent.**
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
 
@@ -437,7 +439,7 @@ iface = gr.Interface(
         gr.HTML(label="Miro"),                                          
         gr.HTML(label="Generate Mind Map on Mapify") 
     ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.9a]",
+    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.91a]",
     description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
 )
 
