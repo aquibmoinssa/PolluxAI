@@ -381,7 +381,7 @@ def chatbot(user_input, context="", subdomain="", use_encoder=False, max_tokens=
     extracted_table_df = gpt_response_to_dataframe(response)
 
     # Combine the response and the data insights
-    full_response = f"{response}\n\nInsights from Existing Data: {data_insights}"
+    full_response = f"{response}\n\nEnd of Response"
     
     # Embed Miro iframe
     iframe_html = """
