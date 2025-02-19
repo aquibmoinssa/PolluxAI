@@ -434,8 +434,7 @@ iface = gr.Interface(
     outputs=[
         gr.Textbox(label="ExosAI finds..."),                           
         gr.Dataframe(label="SC Requirements Table"),      
-        gr.File(label="Download SCDD", type="filepath"),                
-        gr.Dataframe(label="Exoplanet Data Table"),                     
+        gr.File(label="Download SCDD", type="filepath"),                                     
         gr.HTML(label="Miro"),                                          
         gr.HTML(label="Generate Mind Map on Mapify") 
     ],
