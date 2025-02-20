@@ -439,47 +439,57 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
     """
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
-science_objectives_button = gr.Button("Manually Enter Science Objectives")
-science_objectives_input = gr.Textbox(
-    lines=5,
-    placeholder="Enter Science Objectives...",
-    label="Science Objectives",
-    visible=False  # Initially hidden
-)
+with gr.Blocks() as demo:
+    gr.Markdown("# ExosAI - NASA SMD SCDD AI Assistant [version-0.91a]")
+    
+    # User Inputs
+    user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
+    context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context")
+    subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
-def show_science_objectives():
-    return gr.update(visible=True) 
+    # Science Objectives Button & Input (Initially Hidden)
+    science_objectives_button = gr.Button("Manually Enter Science Objectives")
+    science_objectives_input = gr.Textbox(
+        lines=5,
+        placeholder="Enter Science Objectives...",
+        label="Science Objectives",
+        visible=False  # Initially hidden
+    )
 
-science_objectives_button.click(
-    show_science_objectives,  # Function to call
-    inputs=[],  # No inputs needed
-    outputs=[science_objectives_input]  # Target output
-)
+    # Define event inside Blocks (Fix for the Error)
+    science_objectives_button.click(
+        fn=lambda: gr.update(visible=True),  # Show textbox when clicked
+        inputs=[],
+        outputs=[science_objectives_input]
+    )
 
-iface = gr.Interface(
-    fn=chatbot,
-    inputs=[
-        gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal"),
-        gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context"),
-        gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition"),
-        science_objectives_button,  # Button to show the textbox
-        science_objectives_input,  # Initially hidden textbox
-        gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
-        gr.Slider(50, 2000, value=150, step=10, label="Max Tokens"),
-        gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
-        gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p"),
-        gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="Frequency Penalty"),
-        gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
-    ],
-    outputs=[
-        gr.Textbox(label="ExosAI finds..."),                           
-        gr.Dataframe(label="SC Requirements Table"),      
-        gr.File(label="Download SCDD", type="filepath"),                                     
-        gr.HTML(label="Miro"),                                          
-        gr.HTML(label="Generate Mind Map on Mapify") 
-    ],
-    title="ExosAI - NASA SMD SCDD AI Assistant [version-0.91a]",
-    description="ExosAI is an AI-powered assistant for generating and visualising HWO Science Cases",
-)
+    # More Inputs
+    use_encoder = gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context")
+    max_tokens = gr.Slider(50, 2000, value=150, step=10, label="Max Tokens")
+    temperature = gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature")
+    top_p = gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p")
+    frequency_penalty = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="Frequency Penalty")
+    presence_penalty = gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
 
-iface.launch(share=True)
+    # Outputs
+    full_response = gr.Textbox(label="ExosAI finds...")
+    extracted_table_df = gr.Dataframe(label="SC Requirements Table")
+    word_doc_path = gr.File(label="Download SCDD", type="filepath")
+    iframe_html = gr.HTML(label="Miro")
+    mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
+
+    # Launch Button
+    submit_button = gr.Button("Generate Science Case")
+    
+    # Define interaction: When the button is clicked, it triggers `chatbot`
+    submit_button.click(
+        fn=chatbot,
+        inputs=[
+            user_input, science_objectives_input, context, subdomain,
+            use_encoder, max_tokens, temperature, top_p, frequency_penalty, presence_penalty
+        ],
+        outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
+    )
+
+# Launch the app
+demo.launch(share=True)
