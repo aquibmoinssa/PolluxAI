@@ -445,6 +445,7 @@ science_objectives_input = gr.Textbox(
     placeholder="Enter Science Objectives...",
     label="Science Objectives",
     visible=False  # Initially hidden
+)
 
 def show_science_objectives():
     return gr.update(visible=True) 
