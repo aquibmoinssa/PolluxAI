@@ -183,11 +183,22 @@ def fetch_exoplanet_data():
 
     return exoplanet_data
 
-def generate_response(user_input, relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
-    if relevant_context:
-        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nPlease generate a detailed structured response as per the defined sections and table format."
+def generate_response(user_input, science_objectives="", relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
+    # Case 1: Both relevant context and science objectives are provided
+    if relevant_context and science_objectives.strip():
+        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\nScience Objectives (User Provided): {science_objectives}\n\nPlease generate only the remaining sections as per the defined format."
+    
+    # Case 2: Only relevant context is provided
+    elif relevant_context:
+        combined_input = f"Scientific Context: {relevant_context}\nUser Input: {user_input}\n\nPlease generate a full structured response, including Science Objectives."
+    
+    # Case 3: Neither context nor science objectives are provided
+    elif science_objectives.strip():
+        combined_input = f"User Input: {user_input}\nScience Objectives (User Provided): {science_objectives}\n\nPlease generate only the remaining sections as per the defined format."
+    
+    # Default: No relevant context or science objectives → Generate everything
     else:
-        combined_input = f"User Input: {user_input}\nPlease generate a detailed structured response as per the defined sections and table format."
+        combined_input = f"User Input: {user_input}\n\nPlease generate a full structured response, including Science Objectives."
     
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -355,7 +366,7 @@ def gpt_response_to_dataframe(gpt_response):
     df = pd.DataFrame(rows, columns=headers)
     return df
     
-def chatbot(user_input, context="", subdomain="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
+def chatbot(user_input, science_objectives="", context="", subdomain="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     if use_encoder and context:
         context_texts = context
         relevant_context = retrieve_relevant_context(user_input, context_texts)
@@ -366,7 +377,17 @@ def chatbot(user_input, context="", subdomain="", use_encoder=False, max_tokens=
     references = fetch_nasa_ads_references(subdomain)
 
     # Generate response from GPT-4
-    response = generate_response(user_input, relevant_context, references, max_tokens, temperature, top_p, frequency_penalty, presence_penalty)
+    response = generate_response(
+        user_input=user_input,
+        science_objectives=science_objectives,  # Pass Science Objectives
+        relevant_context=relevant_context,  # Pass retrieved context (if any)
+        references=references,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        frequency_penalty=frequency_penalty,
+        presence_penalty=presence_penalty
+    )
 
     # Export the response to a Word document
     word_doc_path = export_to_word(response, subdomain, user_input)
@@ -418,12 +439,30 @@ def chatbot(user_input, context="", subdomain="", use_encoder=False, max_tokens=
     """
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
+science_objectives_button = gr.Button("Manually Enter Science Objectives")
+science_objectives_input = gr.Textbox(
+    lines=5,
+    placeholder="Enter Science Objectives...",
+    label="Science Objectives",
+    visible=False  # Initially hidden
+
+def show_science_objectives():
+    return gr.update(visible=True) 
+
+science_objectives_button.click(
+    show_science_objectives,  # Function to call
+    inputs=[],  # No inputs needed
+    outputs=[science_objectives_input]  # Target output
+)
+
 iface = gr.Interface(
     fn=chatbot,
     inputs=[
         gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal"),
         gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context"),
         gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition"),
+        science_objectives_button,  # Button to show the textbox
+        science_objectives_input,  # Initially hidden textbox
         gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context"),
         gr.Slider(50, 2000, value=150, step=10, label="Max Tokens"),
         gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature"),
