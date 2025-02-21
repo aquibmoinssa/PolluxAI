@@ -478,12 +478,12 @@ with gr.Blocks() as demo:
     iframe_html = gr.HTML(label="Miro")
     mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
 
-    # Buttons: Generate + Clear
+    # Buttons: Generate + Reset
     with gr.Row():
         submit_button = gr.Button("Generate SCDD")
         clear_button = gr.Button("Reset")
 
-    # Define interaction: When "Generate Science Case" is clicked
+    # Define interaction: When "Generate SCDD" is clicked
     submit_button.click(
         fn=chatbot,
         inputs=[
@@ -493,13 +493,27 @@ with gr.Blocks() as demo:
         outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
     )
 
-    # Define Clear Function
+    # Define Clear Function (Ensuring the correct number of outputs)
     def clear_all():
         return (
-            "", "", "", "", False, 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None
+            "",  # user_input
+            "",  # science_objectives_input
+            "",  # context
+            "",  # subdomain
+            False,  # use_encoder
+            150,  # max_tokens
+            0.7,  # temperature
+            0.9,  # top_p
+            0.5,  # frequency_penalty
+            0.0,  # presence_penalty
+            "",  # full_response (textbox output)
+            None,  # extracted_table_df (DataFrame output)
+            None,  # word_doc_path (File output)
+            None,  # iframe_html (HTML output)
+            None   # mapify_button_html (HTML output)
         )
 
-    # Bind Clear Button
+    # Bind Clear Button (Ensuring the correct number of outputs)
     clear_button.click(
         fn=clear_all,
         inputs=[],
