@@ -478,10 +478,12 @@ with gr.Blocks() as demo:
     iframe_html = gr.HTML(label="Miro")
     mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
 
-    # Launch Button
-    submit_button = gr.Button("Generate Science Case")
-    
-    # Define interaction: When the button is clicked, it triggers `chatbot`
+    # Buttons: Generate + Clear
+    with gr.Row():
+        submit_button = gr.Button("Generate SCDD")
+        clear_button = gr.Button("Reset")
+
+    # Define interaction: When "Generate Science Case" is clicked
     submit_button.click(
         fn=chatbot,
         inputs=[
@@ -489,6 +491,23 @@ with gr.Blocks() as demo:
             use_encoder, max_tokens, temperature, top_p, frequency_penalty, presence_penalty
         ],
         outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
+    )
+
+    # 🚀 Define Clear Function
+    def clear_all():
+        return (
+            "", "", "", "", False, 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None
+        )
+
+    # Bind Clear Button
+    clear_button.click(
+        fn=clear_all,
+        inputs=[],
+        outputs=[
+            user_input, science_objectives_input, context, subdomain,
+            use_encoder, max_tokens, temperature, top_p, frequency_penalty, presence_penalty,
+            full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
+        ]
     )
 
 # Launch the app
