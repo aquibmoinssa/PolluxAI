@@ -389,6 +389,9 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
         presence_penalty=presence_penalty
     )
 
+    if science_objectives.strip():
+        response = f"### Science Objectives (User-Defined):\n{science_objectives}\n\n" + response
+    
     # Export the response to a Word document
     word_doc_path = export_to_word(response, subdomain, user_input)
 
