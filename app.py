@@ -254,7 +254,7 @@ def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperatu
     return data_insights
 
 
-def export_to_word(response_content, subdomain_definition, science_goal):
+def export_to_word(response_content, subdomain_definition, science_goal, science_objectives=""):
     doc = Document()
     
     # Add a title (optional, you can remove this if not needed)
@@ -398,7 +398,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
         response = f"### Science Objectives (User-Defined):\n{science_objectives}\n\n" + response
     
     # Export the response to a Word document
-    word_doc_path = export_to_word(response, subdomain, user_input)
+    word_doc_path = export_to_word(response, subdomain, user_input, science_objectives)
 
     # Fetch exoplanet data
     exoplanet_data = fetch_exoplanet_data()
