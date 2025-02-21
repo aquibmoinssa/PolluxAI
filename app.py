@@ -493,7 +493,7 @@ with gr.Blocks() as demo:
         outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
     )
 
-    # 🚀 Define Clear Function
+    # Define Clear Function
     def clear_all():
         return (
             "", "", "", "", False, 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None
