@@ -268,6 +268,11 @@ def export_to_word(response_content, subdomain_definition, science_goal):
     doc.add_heading('Science Goal:', level=1)
     doc.add_paragraph(science_goal)
 
+    # Insert Science Objectives if provided
+    if science_objectives.strip():
+        doc.add_heading('Science Objectives (User-Defined):', level=1)
+        doc.add_paragraph(science_objectives)
+
     # Split the response into sections based on ### headings
     sections = response_content.split('### ')
     
