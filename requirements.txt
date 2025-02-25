@@ -6,3 +6,8 @@ python-docx
 astroquery
 pyvo
 pandas
+faiss-cpu
+PyMuPDF
+PyPDF2
+numpy
+sklearn
