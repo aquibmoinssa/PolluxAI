@@ -443,7 +443,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# ExosAI - NASA SMD SCDD AI Assistant [version-0.91a]")
+    gr.Markdown("# ExosAI - NASA SMD SCDD Generator with RAG [version-1.1]")
     
     # User Inputs
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
