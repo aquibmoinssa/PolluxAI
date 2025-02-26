@@ -503,7 +503,7 @@ with gr.Blocks() as demo:
     # User Inputs
     gr.Markdown("## **User Inputs**")
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
-    context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context")
+    context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Additional Context")
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
     # PDF Upload Section (Up to 3 PDFs)
@@ -511,7 +511,7 @@ with gr.Blocks() as demo:
     uploaded_pdfs = gr.Files(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True)
 
     # Science Objectives Button & Input (Initially Hidden)
-    science_objectives_button = gr.Button("Manually Enter Science Objectives")
+    science_objectives_button = gr.Button("User-defined Science Objectives [Optional]")
     science_objectives_input = gr.Textbox(
         lines=5,
         placeholder="Enter Science Objectives...",
