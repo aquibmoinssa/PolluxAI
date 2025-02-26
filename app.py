@@ -90,87 +90,64 @@ def get_chunks(text, chunk_size=500):
 
 embedding_dim = 768  # NASA Bi-Encoder outputs 768-dimensional embeddings
 index = faiss.IndexFlatIP(embedding_dim)  # FAISS inner product (cosine similarity)
-pdf_chunks = []  # Store extracted chunks for later reference
-chunk_embeddings = []  # Store embeddings for similarity retrieval
 
 def load_and_process_uploaded_pdfs(pdf_files):
-    """Extracts text from uploaded PDFs, splits into chunks, generates embeddings, and stores in FAISS."""
-    global index, pdf_chunks, chunk_embeddings
-
-    # Reset the FAISS index and stored data for new uploads
-    index.reset()
-    pdf_chunks.clear()
-    chunk_embeddings.clear()
-
-    text_data = []
+    
+    """Extracts text from PDFs, splits into chunks, generates embeddings, and stores in FAISS."""
+    
+    pdf_chunks = []  # Store extracted chunks
+    chunk_embeddings = []  # Store embeddings
 
     for pdf_file in pdf_files:
-        if pdf_file is None:
-            continue  # Skip if no file is uploaded
-
         reader = PdfReader(pdf_file)
         pdf_text = ""
         for page in reader.pages:
             pdf_text += page.extract_text() + "\n"
-
-        # Split extracted text into chunks
-        chunks = get_chunks(pdf_text, chunk_size=500)  # Adjust chunk size if needed
-        pdf_chunks.extend(chunks)  # Store for retrieval
         
-        # Generate embeddings for each chunk and store in FAISS
+        # Split extracted text into chunks
+        chunks = get_chunks(pdf_text, chunk_size=500)
+        pdf_chunks.extend(chunks)  # Store chunks for later retrieval
+        
+        # Generate embeddings for each chunk
         for chunk in chunks:
             chunk_embedding = encode_text(chunk).reshape(1, -1)
-
+            
             # Normalize the embedding for cosine similarity
             chunk_embedding = chunk_embedding / np.linalg.norm(chunk_embedding)
+            
+            index.add(chunk_embedding)  # Add to FAISS
+            chunk_embeddings.append(chunk_embedding)
 
-            index.add(chunk_embedding)  # Add normalized embeddings to FAISS
-            chunk_embeddings.append(chunk_embedding)  # Store for reference
-        
-        text_data.extend(chunks)
-
-    return text_data
+    return pdf_chunks, chunk_embeddings  # Return both for retrieval
 
 
-def retrieve_relevant_context(user_input, context_text, science_objectives="", k=3):
+def retrieve_relevant_context(user_input, context_text, science_objectives="", index=None, pdf_chunks=None, k=3):
     """
-    Retrieve the most relevant document chunks using cosine similarity search.
+    Retrieve the most relevant document chunks using FAISS similarity search.
     Uses combined user inputs (Science Goal + Context + Optional Science Objectives).
     """
-    global chunk_embeddings, pdf_chunks  # Ensure we're using the globally stored embeddings and text chunks
+    if index is None or pdf_chunks is None:
+        return "No indexed data available for retrieval."
 
     # Combine all user inputs into a single query
-    query_text = f"Science Goal: {user_input}\nContext: {context_text}"
-    
-    # Append Science Objectives only if provided
-    if science_objectives.strip():
-        query_text += f"\nScience Objectives: {science_objectives}"
+    query_text = f"Science Goal: {user_input}\nContext: {context_text}\nScience Objectives: {science_objectives}" if science_objectives else f"Science Goal: {user_input}\nContext: {context_text}"
 
     # Generate query embedding
     query_embedding = encode_text(query_text).reshape(1, -1)
-
+    
     # Normalize the query embedding for cosine similarity
     query_embedding = query_embedding / np.linalg.norm(query_embedding)
 
-    # Convert stored chunk embeddings into a NumPy array
-    if len(chunk_embeddings) == 0:
-        return "No preloaded document data available.", None
+    # Perform FAISS search to get top-k relevant chunks
+    _, top_indices = index.search(query_embedding, k)
 
-    chunk_embeddings_array = np.array(chunk_embeddings).reshape(len(chunk_embeddings), -1)
-
-    # Compute cosine similarity between the query and all stored chunk embeddings
-    similarities = cosine_similarity(query_embedding, chunk_embeddings_array).flatten()
-
-    # Get indices of top k most relevant chunks
-    top_indices = similarities.argsort()[-k:][::-1]  # Sort in descending order
-
-    # Retrieve the most relevant chunks
-    retrieved_context = "\n\n".join([pdf_chunks[i] for i in top_indices])
+    # Retrieve the most relevant chunks using top indices
+    retrieved_context = "\n\n".join([pdf_chunks[i] for i in top_indices[0]])  # FAISS returns indices in a nested list
 
     # If no relevant chunk is found, return a default message
     if not retrieved_context.strip():
         return "No relevant context found for the query."
-
+    
     return retrieved_context
 
 def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
@@ -419,13 +396,15 @@ def gpt_response_to_dataframe(gpt_response):
     df = pd.DataFrame(rows, columns=headers)
     return df
     
-def chatbot(user_input, science_objectives="", context="", subdomain="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
-    """
-    Handles the full workflow: retrieves relevant context, generates response, processes output.
-    """
+def chatbot(user_input, science_objectives="", context="", subdomain="", uploaded_pdfs=None, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
+    # Load and process uploaded PDFs (if provided)
+    if uploaded_pdfs:
+        pdf_chunks, chunk_embeddings = load_and_process_uploaded_pdfs(uploaded_pdfs)
+    else:
+        pdf_chunks, chunk_embeddings = [], []  # Ensure empty list if no PDFs provided
 
-    # Retrieve relevant context from FAISS using all user inputs
-    relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
+    # Retrieve relevant context using document search
+    relevant_context = retrieve_relevant_context(user_input, context, science_objectives, index, pdf_chunks)
 
     # Fetch NASA ADS references using the full prompt
     references = fetch_nasa_ads_references(subdomain)
