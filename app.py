@@ -506,7 +506,7 @@ with gr.Blocks() as demo:
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
     # PDF Upload Section (Up to 3 PDFs)
-    uploaded_pdfs = gr.File(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True, multiple=True)
+    uploaded_pdfs = gr.Files(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True)
 
     # Science Objectives Button & Input (Initially Hidden)
     science_objectives_button = gr.Button("Manually Enter Science Objectives")
