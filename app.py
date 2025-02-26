@@ -498,15 +498,16 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# ExosAI - NASA SMD FC-RAG SCDD Generator [version-1.1]")
+    gr.Markdown("# **ExosAI - NASA SMD FC-RAG SCDD Generator [version-1.1]**")
 
     # User Inputs
+    gr.Markdown("## **User Inputs**")
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
     context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context")
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
     # PDF Upload Section (Up to 3 PDFs)
-    gr.Markdown("- Context Retrieval Documents [e.g. LUVOIR, HabEx Reports]")
+    gr.Markdown("## **Context Retrieval Documents [e.g. LUVOIR, HabEx Reports]**")
     uploaded_pdfs = gr.Files(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True)
 
     # Science Objectives Button & Input (Initially Hidden)
@@ -526,6 +527,7 @@ with gr.Blocks() as demo:
     )
 
     # Additional Model Parameters
+    gr.Markdown("### **Model Parameters**")
     max_tokens = gr.Slider(50, 2000, value=150, step=10, label="Max Tokens")
     temperature = gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature")
     top_p = gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p")
@@ -533,6 +535,7 @@ with gr.Blocks() as demo:
     presence_penalty = gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
 
     # Outputs
+    gr.Markdown("## **Model Outputs**")
     full_response = gr.Textbox(label="ExosAI finds...")
     extracted_table_df = gr.Dataframe(label="SC Requirements Table")
     word_doc_path = gr.File(label="Download SCDD", type="filepath")
