@@ -498,7 +498,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# ExosAI - NASA SMD SCDD Generator with RAG [version-1.2]")
+    gr.Markdown("# ExosAI - NASA SMD FC-RAG SCDD Generator [version-1.1]")
 
     # User Inputs
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
@@ -506,6 +506,7 @@ with gr.Blocks() as demo:
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
     # PDF Upload Section (Up to 3 PDFs)
+    gr.Markdown("- Context Retrieval Documents [e.g. LUVOIR, HabEx Reports]")
     uploaded_pdfs = gr.Files(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True)
 
     # Science Objectives Button & Input (Initially Hidden)
