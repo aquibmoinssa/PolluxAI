@@ -14,6 +14,8 @@ import tempfile
 from astroquery.nasa_ads import ADS
 import pyvo as vo
 import pandas as pd
+import faiss
+from PyPDF2 import PdfReader
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -71,54 +73,105 @@ def encode_text(text):
     outputs = bi_model(**inputs)
     return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
 
-def get_chunks(text, chunk_size=300):
+def get_chunks(text, chunk_size=500):
     """
-    Split a long piece of text into smaller chunks of approximately 'chunk_size' characters.
+    Splits a long text into smaller chunks of approximately 'chunk_size' characters.
+    Ensures that chunks do not cut off words abruptly.
     """
     if not text.strip():
-        raise ValueError("The provided context is empty or blank.")
-    
+        raise ValueError("The provided text is empty or blank.")
+
     # Split the text into chunks of approximately 'chunk_size' characters
     chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+    
     return chunks
 
-def retrieve_relevant_context(user_input, context_texts, chunk_size=300, similarity_threshold=0.3):
-    """
-    Split the context text into smaller chunks, find the most relevant chunk
-    using cosine similarity, and return the most relevant chunk.
-    If no chunk meets the similarity threshold, return a fallback message.
-    """
-    # Check if the context is empty or just whitespace
-    if not context_texts.strip():
-        return "Error: Context is empty or improperly formatted.", None
-    
-    # Split the long context text into chunks using the chunking function
-    context_chunks = get_chunks(context_texts, chunk_size)
-    
-    # Handle single context case
-    if len(context_chunks) == 1:
-        return context_chunks[0], 1.0  # Return the single chunk with perfect similarity
-    
-    # Encode the user input to create a query embedding
-    user_embedding = encode_text(user_input).reshape(1, -1)
-    
-    # Encode all context chunks to create embeddings
-    chunk_embeddings = np.array([encode_text(chunk) for chunk in context_chunks])
-    
-    # Compute cosine similarity between the user input and each chunk
-    similarities = cosine_similarity(user_embedding, chunk_embeddings).flatten()
-    
-    # Check if any similarity scores are above the threshold
-    if max(similarities) < similarity_threshold:
-        return "No relevant context found for the user input.", None
-    
-    # Identify the most relevant chunk based on the highest cosine similarity score
-    most_relevant_idx = np.argmax(similarities)
-    most_relevant_chunk = context_chunks[most_relevant_idx]
-    
-    # Return the most relevant chunk and the similarity score
-    return most_relevant_chunk
+# Initialize FAISS index with cosine similarity
 
+embedding_dim = 768  # NASA Bi-Encoder outputs 768-dimensional embeddings
+index = faiss.IndexFlatIP(embedding_dim)  # FAISS inner product (cosine similarity)
+pdf_chunks = []  # Store extracted chunks for later reference
+chunk_embeddings = []  # Store embeddings for similarity retrieval
+
+def load_and_process_uploaded_pdfs(pdf_files):
+    """Extracts text from uploaded PDFs, splits into chunks, generates embeddings, and stores in FAISS."""
+    global index, pdf_chunks, chunk_embeddings
+
+    # Reset the FAISS index and stored data for new uploads
+    index.reset()
+    pdf_chunks.clear()
+    chunk_embeddings.clear()
+
+    text_data = []
+
+    for pdf_file in pdf_files:
+        if pdf_file is None:
+            continue  # Skip if no file is uploaded
+
+        reader = PdfReader(pdf_file)
+        pdf_text = ""
+        for page in reader.pages:
+            pdf_text += page.extract_text() + "\n"
+
+        # Split extracted text into chunks
+        chunks = get_chunks(pdf_text, chunk_size=500)  # Adjust chunk size if needed
+        pdf_chunks.extend(chunks)  # Store for retrieval
+        
+        # Generate embeddings for each chunk and store in FAISS
+        for chunk in chunks:
+            chunk_embedding = encode_text(chunk).reshape(1, -1)
+
+            # Normalize the embedding for cosine similarity
+            chunk_embedding = chunk_embedding / np.linalg.norm(chunk_embedding)
+
+            index.add(chunk_embedding)  # Add normalized embeddings to FAISS
+            chunk_embeddings.append(chunk_embedding)  # Store for reference
+        
+        text_data.extend(chunks)
+
+    return text_data
+
+
+def retrieve_relevant_context(user_input, context_text, science_objectives="", k=3):
+    """
+    Retrieve the most relevant document chunks using cosine similarity search.
+    Uses combined user inputs (Science Goal + Context + Optional Science Objectives).
+    """
+    global chunk_embeddings, pdf_chunks  # Ensure we're using the globally stored embeddings and text chunks
+
+    # Combine all user inputs into a single query
+    query_text = f"Science Goal: {user_input}\nContext: {context_text}"
+    
+    # Append Science Objectives only if provided
+    if science_objectives.strip():
+        query_text += f"\nScience Objectives: {science_objectives}"
+
+    # Generate query embedding
+    query_embedding = encode_text(query_text).reshape(1, -1)
+
+    # Normalize the query embedding for cosine similarity
+    query_embedding = query_embedding / np.linalg.norm(query_embedding)
+
+    # Convert stored chunk embeddings into a NumPy array
+    if len(chunk_embeddings) == 0:
+        return "No preloaded document data available.", None
+
+    chunk_embeddings_array = np.array(chunk_embeddings).reshape(len(chunk_embeddings), -1)
+
+    # Compute cosine similarity between the query and all stored chunk embeddings
+    similarities = cosine_similarity(query_embedding, chunk_embeddings_array).flatten()
+
+    # Get indices of top k most relevant chunks
+    top_indices = similarities.argsort()[-k:][::-1]  # Sort in descending order
+
+    # Retrieve the most relevant chunks
+    retrieved_context = "\n\n".join([pdf_chunks[i] for i in top_indices])
+
+    # If no relevant chunk is found, return a default message
+    if not retrieved_context.strip():
+        return "No relevant context found for the query."
+
+    return retrieved_context
 
 def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
     # Define a prompt to ask GPT-4 to extract keywords and important terms
@@ -367,20 +420,21 @@ def gpt_response_to_dataframe(gpt_response):
     return df
     
 def chatbot(user_input, science_objectives="", context="", subdomain="", use_encoder=False, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
-    if use_encoder and context:
-        context_texts = context
-        relevant_context = retrieve_relevant_context(user_input, context_texts)
-    else:
-        relevant_context = ""
+    """
+    Handles the full workflow: retrieves relevant context, generates response, processes output.
+    """
+
+    # Retrieve relevant context from FAISS using all user inputs
+    relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
 
     # Fetch NASA ADS references using the full prompt
     references = fetch_nasa_ads_references(subdomain)
 
-    # Generate response from GPT-4
+    # Generate response from GPT-4, ensuring we pass all relevant inputs
     response = generate_response(
         user_input=user_input,
-        science_objectives=science_objectives,  # Pass Science Objectives
-        relevant_context=relevant_context,  # Pass retrieved context (if any)
+        science_objectives=science_objectives,  
+        relevant_context=relevant_context,  # Ensure retrieved FAISS context is passed
         references=references,
         max_tokens=max_tokens,
         temperature=temperature,
@@ -389,6 +443,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
         presence_penalty=presence_penalty
     )
 
+    # Append manually entered science objectives to the response (if provided)
     if science_objectives.strip():
         response = f"### Science Objectives (User-Defined):\n\n{science_objectives}\n\n" + response
     
@@ -443,12 +498,15 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", use_enc
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# ExosAI - NASA SMD SCDD Generator with RAG [version-1.1]")
-    
+    gr.Markdown("# ExosAI - NASA SMD SCDD Generator with RAG [version-1.2]")
+
     # User Inputs
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
     context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Context")
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
+
+    # PDF Upload Section (Up to 3 PDFs)
+    uploaded_pdfs = gr.File(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True, multiple=True)
 
     # Science Objectives Button & Input (Initially Hidden)
     science_objectives_button = gr.Button("Manually Enter Science Objectives")
@@ -459,15 +517,14 @@ with gr.Blocks() as demo:
         visible=False  # Initially hidden
     )
 
-    # Define event inside Blocks (Fix for the Error)
+    # Event to Show Science Objectives Input
     science_objectives_button.click(
         fn=lambda: gr.update(visible=True),  # Show textbox when clicked
         inputs=[],
         outputs=[science_objectives_input]
     )
 
-    # More Inputs
-    use_encoder = gr.Checkbox(label="Use NASA SMD Bi-Encoder for Context")
+    # Additional Model Parameters
     max_tokens = gr.Slider(50, 2000, value=150, step=10, label="Max Tokens")
     temperature = gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature")
     top_p = gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p")
@@ -490,8 +547,8 @@ with gr.Blocks() as demo:
     submit_button.click(
         fn=chatbot,
         inputs=[
-            user_input, science_objectives_input, context, subdomain,
-            use_encoder, max_tokens, temperature, top_p, frequency_penalty, presence_penalty
+            user_input, science_objectives_input, context, subdomain, uploaded_pdfs,
+            max_tokens, temperature, top_p, frequency_penalty, presence_penalty
         ],
         outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
     )
@@ -503,7 +560,7 @@ with gr.Blocks() as demo:
             "",  # science_objectives_input
             "",  # context
             "",  # subdomain
-            False,  # use_encoder
+            None,  # uploaded_pdfs
             150,  # max_tokens
             0.7,  # temperature
             0.9,  # top_p
@@ -521,11 +578,12 @@ with gr.Blocks() as demo:
         fn=clear_all,
         inputs=[],
         outputs=[
-            user_input, science_objectives_input, context, subdomain,
-            use_encoder, max_tokens, temperature, top_p, frequency_penalty, presence_penalty,
+            user_input, science_objectives_input, context, subdomain, uploaded_pdfs,
+            max_tokens, temperature, top_p, frequency_penalty, presence_penalty,
             full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
         ]
     )
 
 # Launch the app
 demo.launch(share=True)
+
