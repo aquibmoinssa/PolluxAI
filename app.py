@@ -284,7 +284,7 @@ def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperatu
     return data_insights
 
 
-def export_to_word(response_content, subdomain_definition, science_goal):
+def export_to_word(response_content, subdomain_definition, science_goal, context, max_tokens, temperature, top_p, frequency_penalty, presence_penalty):
     doc = Document()
     
     # Add a title (optional, you can remove this if not needed)
@@ -297,6 +297,18 @@ def export_to_word(response_content, subdomain_definition, science_goal):
     # Insert the Science Goal at the top
     doc.add_heading('Science Goal:', level=1)
     doc.add_paragraph(science_goal)
+
+    # Insert the User-defined Context
+    doc.add_heading('User-defined Context:', level=1)
+    doc.add_paragraph(context)
+
+    # Insert Model Parameters
+    doc.add_heading('Model Parameters:', level=1)
+    doc.add_paragraph(f"Max Tokens: {max_tokens}")
+    doc.add_paragraph(f"Temperature: {temperature}")
+    doc.add_paragraph(f"Top-p: {top_p}")
+    doc.add_paragraph(f"Frequency Penalty: {frequency_penalty}")
+    doc.add_paragraph(f"Presence Penalty: {presence_penalty}")
 
     # Split the response into sections based on ### headings
     sections = response_content.split('### ')
@@ -427,7 +439,17 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", uploade
         response = f"### Science Objectives (User-Defined):\n\n{science_objectives}\n\n" + response
     
     # Export the response to a Word document
-    word_doc_path = export_to_word(response, subdomain, user_input)
+    word_doc_path = export_to_word(
+    response, 
+    subdomain, 
+    user_input, 
+    context, 
+    max_tokens, 
+    temperature, 
+    top_p, 
+    frequency_penalty, 
+    presence_penalty
+    )
 
     # Fetch exoplanet data
     exoplanet_data = fetch_exoplanet_data()
@@ -486,7 +508,7 @@ with gr.Blocks() as demo:
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
     # PDF Upload Section (Up to 3 PDFs)
-    gr.Markdown("## **Context Retrieval Documents [e.g. LUVOIR, HabEx Reports]**")
+    gr.Markdown("### **Documents for Context Retrieval [e.g. LUVOIR, HabEx Reports]**")
     uploaded_pdfs = gr.Files(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True)
 
     # Science Objectives Button & Input (Initially Hidden)
