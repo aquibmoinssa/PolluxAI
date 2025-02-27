@@ -1,3 +1,5 @@
+# FC-RAG with FAISS
+
 import gradio as gr
 from transformers import AutoTokenizer, AutoModel
 from openai import OpenAI
