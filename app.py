@@ -88,14 +88,12 @@ def get_chunks(text, chunk_size=500):
     
     return chunks
 
-# Initialize FAISS index with cosine similarity
-
-embedding_dim = 768  # NASA Bi-Encoder outputs 768-dimensional embeddings
-index = faiss.IndexFlatIP(embedding_dim)  # FAISS inner product (cosine similarity)
-
 def load_and_process_uploaded_pdfs(pdf_files):
-    
     """Extracts text from PDFs, splits into chunks, generates embeddings, and stores in FAISS."""
+    
+    # **RESET FAISS INDEX on every function call**
+    embedding_dim = 768  # NASA Bi-Encoder embedding size
+    index = faiss.IndexFlatIP(embedding_dim)  # Fresh FAISS index
     
     pdf_chunks = []  # Store extracted chunks
     chunk_embeddings = []  # Store embeddings
@@ -106,21 +104,22 @@ def load_and_process_uploaded_pdfs(pdf_files):
         for page in reader.pages:
             pdf_text += page.extract_text() + "\n"
         
-        # Split extracted text into chunks
-        chunks = get_chunks(pdf_text, chunk_size=500)
-        pdf_chunks.extend(chunks)  # Store chunks for later retrieval
+        # **Reduce Chunk Size for Faster Processing**
+        chunks = get_chunks(pdf_text, chunk_size=300)  
+        pdf_chunks.extend(chunks)  # Store for retrieval
         
         # Generate embeddings for each chunk
         for chunk in chunks:
             chunk_embedding = encode_text(chunk).reshape(1, -1)
             
-            # Normalize the embedding for cosine similarity
+            # Normalize for cosine similarity
             chunk_embedding = chunk_embedding / np.linalg.norm(chunk_embedding)
             
-            index.add(chunk_embedding)  # Add to FAISS
+            index.add(chunk_embedding)  # **Now adding to fresh FAISS index**
             chunk_embeddings.append(chunk_embedding)
 
-    return pdf_chunks, chunk_embeddings  # Return both for retrieval
+    return index, pdf_chunks, chunk_embeddings  # Return fresh FAISS index and chunk data
+
 
 
 def retrieve_relevant_context(user_input, context_text, science_objectives="", index=None, pdf_chunks=None, k=3):
@@ -413,7 +412,7 @@ def gpt_response_to_dataframe(gpt_response):
 def chatbot(user_input, science_objectives="", context="", subdomain="", uploaded_pdfs=None, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     # Load and process uploaded PDFs (if provided)
     if uploaded_pdfs:
-        pdf_chunks, chunk_embeddings = load_and_process_uploaded_pdfs(uploaded_pdfs)
+        index, pdf_chunks, chunk_embeddings = load_and_process_uploaded_pdfs(uploaded_pdfs)
     else:
         pdf_chunks, chunk_embeddings = [], []  # Ensure empty list if no PDFs provided
 
