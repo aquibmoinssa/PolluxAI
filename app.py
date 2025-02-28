@@ -48,14 +48,14 @@ Generate a **detailed and structured** response based on the given **science con
     - Instrument: Should only be Imager, Spectrograph, Polarimeter and Coronagraph).
     - Necessary Values: The necessary values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable, contrast ratio where applicable).
     - Desired Values: The desired values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable).
+    - Number of Objects Observed: Estimate the number of objects that need to be observed for a statistically meaningful result or for fulfilling the science objective.
     - Justification: Detailed scientific explanation of why these observations are important for the science objectives.
     - Comments: Additional notes or remarks regarding each observation.
 
 #### **Table Format** 
 
-| Wavelength Band      | Instrument                         | Necessary Values                   | Desired Values                  | Justification                   | Comments          |
-|----------------------|------------------------------------|------------------------------------|---------------------------------|---------------------------------|-------------------|
-
+| Wavelength Band      | Instrument                         | Necessary Values                   | Desired Values                  | Number of Objects Observed      | Justification     | Comments |
+|----------------------|------------------------------------|------------------------------------|---------------------------------|---------------------------------|-------------------|----------|
 
 #### **Guiding Constraints (Exclusions & Prioritization)**
 - **Wavelength Band Restriction:** Only include **UV, Visible, and Infrared** bands.
@@ -65,6 +65,7 @@ Generate a **detailed and structured** response based on the given **science con
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
 - **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**.
 - **Contrast Ratio:** Limit contrast ratio to the range **10^4 - 10^6**.
+- **Estimate the "Number of Objects Observed" based on the observational strategy, parameters, instruments, statistical requirements, and feasibility.**
 - **Ensure that all parameters remain scientifically consistent.**
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
