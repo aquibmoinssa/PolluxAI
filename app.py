@@ -1,6 +1,6 @@
 # FC-RAG with FAISS
 
-# re-build-1
+# re-build: 02/03/2025
 
 import gradio as gr
 from transformers import AutoTokenizer, AutoModel
@@ -320,7 +320,7 @@ def export_to_word(response_content, subdomain_definition, science_goal, context
     for section in sections:
         if section.strip():
             # Handle the "Observations Requirements Table" separately with proper formatting
-            if section.startswith('Observations Requirements Table'):
+            if 'Observations Requirements Table' in section:
                 doc.add_heading('Observations Requirements Table', level=1)
                 
                 # Extract table lines
