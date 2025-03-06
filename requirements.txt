@@ -2,11 +2,9 @@ transformers
 torch
 scikit-learn
 openai
+pinecone
 python-docx
 astroquery
 pyvo
 pandas
-faiss-cpu
-PyMuPDF
-PyPDF2
 numpy
