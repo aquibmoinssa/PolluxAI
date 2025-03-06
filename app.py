@@ -1,6 +1,3 @@
-# FC-RAG with FAISS
-
-# re-build: 02/03/2025
 
 import gradio as gr
 from transformers import AutoTokenizer, AutoModel
@@ -18,8 +15,7 @@ import tempfile
 from astroquery.nasa_ads import ADS
 import pyvo as vo
 import pandas as pd
-import faiss
-from PyPDF2 import PdfReader
+from pinecone import Pinecone
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -32,6 +28,12 @@ client = OpenAI(api_key=api_key)
 
 # Set up NASA ADS token
 ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
+
+# Pinecone setup
+pinecone_api_key = os.getenv('PINECONE_API_KEY')
+pc = Pinecone(api_key=pinecone_api_key)
+index_name = "scdd-index"
+index = pc.Index(index_name)
 
 # Define system message with instructions
 system_message = """
@@ -73,85 +75,32 @@ Generate a **detailed and structured** response based on the given **science con
 Ensure the response is **structured, clear, and observation requirements table follows this format**. **All included parameters must be scientifically consistent with each other.**
 """
 
-def encode_text(text):
+# Function to encode query text
+def encode_query(text):
     inputs = bi_tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
     outputs = bi_model(**inputs)
-    return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
-
-def get_chunks(text, chunk_size=500):
-    """
-    Splits a long text into smaller chunks of approximately 'chunk_size' characters.
-    Ensures that chunks do not cut off words abruptly.
-    """
-    if not text.strip():
-        raise ValueError("The provided text is empty or blank.")
-
-    # Split the text into chunks of approximately 'chunk_size' characters
-    chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
-    
-    return chunks
-
-def load_and_process_uploaded_pdfs(pdf_files):
-    """Extracts text from PDFs, splits into chunks, generates embeddings, and stores in FAISS."""
-    
-    # **RESET FAISS INDEX on every function call**
-    embedding_dim = 768  # NASA Bi-Encoder embedding size
-    index = faiss.IndexFlatIP(embedding_dim)  # Fresh FAISS index
-    
-    pdf_chunks = []  # Store extracted chunks
-    chunk_embeddings = []  # Store embeddings
-
-    for pdf_file in pdf_files:
-        reader = PdfReader(pdf_file)
-        pdf_text = ""
-        for page in reader.pages:
-            pdf_text += page.extract_text() + "\n"
-        
-        # **Reduce Chunk Size for Faster Processing**
-        chunks = get_chunks(pdf_text, chunk_size=300)  
-        pdf_chunks.extend(chunks)  # Store for retrieval
-        
-        # Generate embeddings for each chunk
-        for chunk in chunks:
-            chunk_embedding = encode_text(chunk).reshape(1, -1)
-            
-            # Normalize for cosine similarity
-            chunk_embedding = chunk_embedding / np.linalg.norm(chunk_embedding)
-            
-            index.add(chunk_embedding)  # **Now adding to fresh FAISS index**
-            chunk_embeddings.append(chunk_embedding)
-
-    return index, pdf_chunks, chunk_embeddings  # Return fresh FAISS index and chunk data
+    embedding = outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
+    embedding /= np.linalg.norm(embedding)
+    return embedding.tolist()
 
 
-
-def retrieve_relevant_context(user_input, context_text, science_objectives="", index=None, pdf_chunks=None, k=3):
-    """
-    Retrieve the most relevant document chunks using FAISS similarity search.
-    Uses combined user inputs (Science Goal + Context + Optional Science Objectives).
-    """
-    if index is None or pdf_chunks is None:
-        return "No indexed data available for retrieval."
-
-    # Combine all user inputs into a single query
+# Context retrieval function using Pinecone
+def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=3):
     query_text = f"Science Goal: {user_input}\nContext: {context_text}\nScience Objectives: {science_objectives}" if science_objectives else f"Science Goal: {user_input}\nContext: {context_text}"
+    query_embedding = encode_query(query_text)
 
-    # Generate query embedding
-    query_embedding = encode_text(query_text).reshape(1, -1)
-    
-    # Normalize the query embedding for cosine similarity
-    query_embedding = query_embedding / np.linalg.norm(query_embedding)
+    # Pinecone query
+    query_response = index.query(
+        vector=query_embedding,
+        top_k=top_k,
+        include_metadata=True
+    )
 
-    # Perform FAISS search to get top-k relevant chunks
-    _, top_indices = index.search(query_embedding, k)
+    retrieved_context = "\n\n".join([match['metadata']['text'] for match in query_response.matches])
 
-    # Retrieve the most relevant chunks using top indices
-    retrieved_context = "\n\n".join([pdf_chunks[i] for i in top_indices[0]])  # FAISS returns indices in a nested list
-
-    # If no relevant chunk is found, return a default message
     if not retrieved_context.strip():
         return "No relevant context found for the query."
-    
+
     return retrieved_context
 
 def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
@@ -412,24 +361,19 @@ def gpt_response_to_dataframe(gpt_response):
     df = pd.DataFrame(rows, columns=headers)
     return df
     
-def chatbot(user_input, science_objectives="", context="", subdomain="", uploaded_pdfs=None, max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
-    # Load and process uploaded PDFs (if provided)
-    if uploaded_pdfs:
-        index, pdf_chunks, chunk_embeddings = load_and_process_uploaded_pdfs(uploaded_pdfs)
-    else:
-        pdf_chunks, chunk_embeddings = [], []  # Ensure empty list if no PDFs provided
+def chatbot(user_input, science_objectives="", context="", subdomain="", max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
 
-    # Retrieve relevant context using document search
-    relevant_context = retrieve_relevant_context(user_input, context, science_objectives, index, pdf_chunks)
+    # Retrieve relevant context using Pinecone
+    relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
 
     # Fetch NASA ADS references using the full prompt
     references = fetch_nasa_ads_references(subdomain)
 
-    # Generate response from GPT-4, ensuring we pass all relevant inputs
+    # Generate response from GPT-4
     response = generate_response(
         user_input=user_input,
         science_objectives=science_objectives,  
-        relevant_context=relevant_context,  # Ensure retrieved FAISS context is passed
+        relevant_context=relevant_context,
         references=references,
         max_tokens=max_tokens,
         temperature=temperature,
@@ -438,161 +382,64 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", uploade
         presence_penalty=presence_penalty
     )
 
-    # Append manually entered science objectives to the response (if provided)
+    # Append user-defined science objectives if provided
     if science_objectives.strip():
         response = f"### Science Objectives (User-Defined):\n\n{science_objectives}\n\n" + response
-    
-    # Export the response to a Word document
+
+    # Export response to Word
     word_doc_path = export_to_word(
-    response, 
-    subdomain, 
-    user_input, 
-    context, 
-    max_tokens, 
-    temperature, 
-    top_p, 
-    frequency_penalty, 
-    presence_penalty
+        response, subdomain, user_input, context, 
+        max_tokens, temperature, top_p, frequency_penalty, presence_penalty
     )
 
-    # Fetch exoplanet data
+    # Fetch exoplanet data and generate insights
     exoplanet_data = fetch_exoplanet_data()
-
-    # Generate insights based on the user query and exoplanet data
     data_insights = generate_data_insights(user_input, exoplanet_data)
 
-    # Extract and convert the table from the GPT-4 response into a DataFrame
+    # Extract GPT-generated table into DataFrame
     extracted_table_df = gpt_response_to_dataframe(response)
 
-    # Combine the response and the data insights
+    # Combine response and insights
     full_response = f"{response}\n\nEnd of Response"
-    
-    # Embed Miro iframe
-    iframe_html = """
-    <iframe width="768" height="432" src="https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721" frameborder="0" scrolling="no" allow="fullscreen; clipboard-read; clipboard-write" allowfullscreen></iframe>
-    """
-    
-    mapify_button_html = """
-    <style>
-        .mapify-button {
-            background: linear-gradient(135deg, #1E90FF 0%, #87CEFA 100%);
-            border: none;
-            color: white;
-            padding: 15px 35px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 20px 2px;
-            cursor: pointer;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        .mapify-button:hover {
-            background: linear-gradient(135deg, #4682B4 0%, #1E90FF 100%);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
-        }
-    </style>
-    <a href="https://mapify.so/app/new" target="_blank">
-        <button class="mapify-button">Create Mind Map on Mapify</button>
-    </a>
-    """
+
+    iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
+    mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
+
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# **ExosAI - NASA SMD FC-RAG SCDD Generator [version-1.1]**")
+    gr.Markdown("# **ExosAI - NASA SMD FCRAG SCDD Generator [version-2.1]**")
 
-    # User Inputs
     gr.Markdown("## **User Inputs**")
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
     context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Additional Context")
     subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
-    # PDF Upload Section (Up to 3 PDFs)
-    gr.Markdown("### **Documents for Context Retrieval [e.g. LUVOIR, HabEx Reports]**")
-    uploaded_pdfs = gr.Files(file_types=[".pdf"], label="Upload Reference PDFs (Up to 3)", interactive=True)
-
-    # Science Objectives Button & Input (Initially Hidden)
     science_objectives_button = gr.Button("User-defined Science Objectives [Optional]")
-    science_objectives_input = gr.Textbox(
-        lines=5,
-        placeholder="Enter Science Objectives...",
-        label="Science Objectives",
-        visible=False  # Initially hidden
-    )
+    science_objectives_input = gr.Textbox(lines=5, placeholder="Enter Science Objectives...", label="Science Objectives", visible=False)
+    science_objectives_button.click(lambda: gr.update(visible=True), outputs=[science_objectives_input])
 
-    # Event to Show Science Objectives Input
-    science_objectives_button.click(
-        fn=lambda: gr.update(visible=True),  # Show textbox when clicked
-        inputs=[],
-        outputs=[science_objectives_input]
-    )
-
-    # Additional Model Parameters
     gr.Markdown("### **Model Parameters**")
-    max_tokens = gr.Slider(50, 2000, value=150, step=10, label="Max Tokens")
-    temperature = gr.Slider(0.0, 1.0, value=0.7, step=0.1, label="Temperature")
-    top_p = gr.Slider(0.0, 1.0, value=0.9, step=0.1, label="Top-p")
-    frequency_penalty = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="Frequency Penalty")
-    presence_penalty = gr.Slider(0.0, 1.0, value=0.0, step=0.1, label="Presence Penalty")
+    max_tokens = gr.Slider(50, 2000, 150, step=10, label="Max Tokens")
+    temperature = gr.Slider(0.0, 1.0, 0.7, step=0.1, label="Temperature")
+    top_p = gr.Slider(0.0, 1.0, 0.9, step=0.1, label="Top-p")
+    frequency_penalty = gr.Slider(0.0, 1.0, 0.5, step=0.1, label="Frequency Penalty")
+    presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
 
-    # Outputs
     gr.Markdown("## **Model Outputs**")
     full_response = gr.Textbox(label="ExosAI finds...")
     extracted_table_df = gr.Dataframe(label="SC Requirements Table")
-    word_doc_path = gr.File(label="Download SCDD", type="filepath")
+    word_doc_path = gr.File(label="Download SCDD")
     iframe_html = gr.HTML(label="Miro")
     mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
 
-    # Buttons: Generate + Reset
     with gr.Row():
         submit_button = gr.Button("Generate SCDD")
         clear_button = gr.Button("Reset")
 
-    # Define interaction: When "Generate SCDD" is clicked
-    submit_button.click(
-        fn=chatbot,
-        inputs=[
-            user_input, science_objectives_input, context, subdomain, uploaded_pdfs,
-            max_tokens, temperature, top_p, frequency_penalty, presence_penalty
-        ],
-        outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
-    )
+    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
 
-    # Define Clear Function (Ensuring the correct number of outputs)
-    def clear_all():
-        return (
-            "",  # user_input
-            "",  # science_objectives_input
-            "",  # context
-            "",  # subdomain
-            None,  # uploaded_pdfs
-            150,  # max_tokens
-            0.7,  # temperature
-            0.9,  # top_p
-            0.5,  # frequency_penalty
-            0.0,  # presence_penalty
-            "",  # full_response (textbox output)
-            None,  # extracted_table_df (DataFrame output)
-            None,  # word_doc_path (File output)
-            None,  # iframe_html (HTML output)
-            None   # mapify_button_html (HTML output)
-        )
+    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
 
-    # Bind Clear Button (Ensuring the correct number of outputs)
-    clear_button.click(
-        fn=clear_all,
-        inputs=[],
-        outputs=[
-            user_input, science_objectives_input, context, subdomain, uploaded_pdfs,
-            max_tokens, temperature, top_p, frequency_penalty, presence_penalty,
-            full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
-        ]
-    )
-
-# Launch the app
 demo.launch(share=True)
 
