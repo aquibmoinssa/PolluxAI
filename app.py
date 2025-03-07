@@ -408,7 +408,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# **ExosAI - NASA SMD FCRAG SCDD Generator [version-2.1]**")
+    gr.Markdown("# **ExosAI - NASA SMD PCRAG SCDD Generator [version-2.1]**")
 
     gr.Markdown("## **User Inputs**")
     user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
@@ -427,6 +427,7 @@ with gr.Blocks() as demo:
     presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
 
     gr.Markdown("## **Model Outputs**")
+    gr.Markdown("### **Accessing Pinecone vector database for context retrieval and generating response...**")
     full_response = gr.Textbox(label="ExosAI finds...")
     extracted_table_df = gr.Dataframe(label="SC Requirements Table")
     word_doc_path = gr.File(label="Download SCDD")
