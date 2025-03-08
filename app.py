@@ -363,6 +363,12 @@ def gpt_response_to_dataframe(gpt_response):
     
 def chatbot(user_input, science_objectives="", context="", subdomain="", max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
 
+    
+    yield "🔄 Connecting with Pinecone...", None, None, None, None
+    
+    pc_index_name = "scdd-index"
+    yield f"✅ Using Pinecone index: **{index_name}**", None, None, None, None
+    
     # Retrieve relevant context using Pinecone
     relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
 
@@ -405,7 +411,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
 
-    return full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
+    yield full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
     gr.Markdown("# **ExosAI - NASA SMD PCRAG SCDD Generator [version-2.1]**")
@@ -438,7 +444,7 @@ with gr.Blocks() as demo:
         submit_button = gr.Button("Generate SCDD")
         clear_button = gr.Button("Reset")
 
-    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
+    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
 
     clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
 
