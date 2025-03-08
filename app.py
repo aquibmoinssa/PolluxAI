@@ -367,14 +367,19 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield "🔄 Connecting with Pinecone...", None, None, None, None
     
     pc_index_name = "scdd-index"
-    yield f"✅ Using Pinecone index: **{index_name}**", None, None, None, None
-    
+    yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None
+
+    yield "🔎 Retrieving relevant context...", None, None, None, None
     # Retrieve relevant context using Pinecone
     relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
+
+    yield "Context Retrieved successfully ✅ ", None, None, None, None
 
     # Fetch NASA ADS references using the full prompt
     references = fetch_nasa_ads_references(subdomain)
 
+    yield "🔄 Generating structured response using GPT-4o...", None, None, None, None
+    
     # Generate response from GPT-4
     response = generate_response(
         user_input=user_input,
@@ -387,7 +392,9 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty
     )
-
+    
+    yield "Response generated successfully ✅ ", None, None, None, None
+    
     # Append user-defined science objectives if provided
     if science_objectives.strip():
         response = f"### Science Objectives (User-Defined):\n\n{science_objectives}\n\n" + response
@@ -398,6 +405,8 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         max_tokens, temperature, top_p, frequency_penalty, presence_penalty
     )
 
+    yield "Writing SCDD...", None, None, None, None
+    
     # Fetch exoplanet data and generate insights
     exoplanet_data = fetch_exoplanet_data()
     data_insights = generate_data_insights(user_input, exoplanet_data)
@@ -407,6 +416,8 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     # Combine response and insights
     full_response = f"{response}\n\nEnd of Response"
+
+    yield "SCDD produced successfully ✅", None, None, None, None
 
     iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
