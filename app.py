@@ -69,8 +69,11 @@ Generate a **detailed and structured** response based on the given **science con
 - **Contrast Ratio:** Limit contrast ratio to the range **10^4 - 10^6**.
 - **Estimate the "Number of Objects Observed" based on the observational strategy, parameters, instruments, statistical requirements, and feasibility.**
 - **Ensure that all parameters remain scientifically consistent.**
+- **Include inline references wherever available**. Especially in the Justification column.
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
+
+**Include inline references wherever available**. Especially in the Justification column.
 
 Ensure the response is **structured, clear, and observation requirements table follows this format**. **All included parameters must be scientifically consistent with each other.**
 """
