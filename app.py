@@ -16,6 +16,8 @@ from astroquery.nasa_ads import ADS
 import pyvo as vo
 import pandas as pd
 from pinecone import Pinecone
+import logging
+import re
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -106,11 +108,10 @@ def retrieve_relevant_context(user_input, context_text, science_objectives="", t
 
     return retrieved_context
 
-def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
-    # Define a prompt to ask GPT-4 to extract keywords and important terms
-    keyword_prompt = f"Extract the most important keywords, scientific concepts, and parameters from the following user query:\n\n{user_input}"
+def extract_keywords_with_gpt(context, max_tokens=100, temperature=0.3):
     
-    # Call GPT-4 to extract keywords based on the user prompt
+    keyword_prompt = f"Extract 3 most important scientific keywords from the following user query:\n\n{context}"
+    
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -121,35 +122,40 @@ def extract_keywords_with_gpt(user_input, max_tokens=100, temperature=0.3):
         temperature=temperature
     )
     
-    # Extract the content from GPT-4's reply
     extracted_keywords = response.choices[0].message.content.strip()
     
-    return extracted_keywords
+    cleaned_keywords = re.sub(r'\d+\.\s*', '', extracted_keywords)
 
-def fetch_nasa_ads_references(prompt):
-    try:
-        # Use the entire prompt for the query
-        simplified_query = prompt
-
-        # Query NASA ADS for relevant papers
-        papers = ADS.query_simple(simplified_query)
-        
-        if not papers or len(papers) == 0:
-            return [("No results found", "N/A", "N/A")]
-        
-        # Include authors in the references
-        references = [
-            (
-                paper['title'][0], 
-                ", ".join(paper['author'][:3]) + (" et al." if len(paper['author']) > 3 else ""), 
-                paper['bibcode']
-            ) 
-            for paper in papers[:5]  # Limit to 5 references
-        ]
-        return references
+    keywords_list = [kw.strip() for kw in cleaned_keywords.split("\n") if kw.strip()]
     
+    return keywords_list
+
+def fetch_nasa_ads_references(ads_query):
+    """Fetch relevant NASA ADS papers and format them for readability."""
+    try:
+        # Query NASA ADS for relevant papers
+        papers = ADS.query_simple(ads_query)
+
+        if not papers or len(papers) == 0:
+            return [("No results found", "N/A", "N/A", "N/A", "N/A", "N/A")]
+
+        # Include authors in the references
+        references = []
+        for paper in papers[:5]:  # Limit to 5 references
+            title = paper.get('title', ['Title not available'])[0]
+            abstract = paper.get('abstract', 'Abstract not available')
+            authors = ", ".join(paper.get('author', [])[:3]) + (" et al." if len(paper.get('author', [])) > 3 else "")
+            bibcode = paper.get('bibcode', 'N/A')
+            pub = paper.get('pub', 'Unknown Journal')
+            pubdate = paper.get('pubdate', 'Unknown Date')
+
+            references.append((title, abstract, authors, bibcode, pub, pubdate))
+
+        return references
+
     except Exception as e:
-        return [("Error fetching references", str(e), "N/A")]
+        logging.error(f"Error fetching ADS references: {str(e)}")
+        return [("Error fetching references", "See logs for details", "N/A", "N/A", "N/A", "N/A")]
 
 def fetch_exoplanet_data():
     # Connect to NASA Exoplanet Archive TAP Service
@@ -203,7 +209,7 @@ def generate_response(user_input, science_objectives="", relevant_context="", re
     if references:
         response_content = response.choices[0].message.content.strip()
         references_text = "\n\nADS References:\n" + "\n".join(
-            [f"- {title} by {authors} (Bibcode: {bibcode})" for title, authors, bibcode in references]
+            [f"- {title} {authors} (Bibcode: {bibcode}) {pub} {pubdate}" for title, abstract, authors, bibcode, pub, pubdate in references])
         )
         return f"{response_content}\n{references_text}"
     
@@ -378,8 +384,12 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     yield "Context Retrieved successfully ✅ ", None, None, None, None
 
-    # Fetch NASA ADS references using the full prompt
-    references = fetch_nasa_ads_references(subdomain)
+    keywords = extract_keywords_with_gpt(context)
+
+    ads_query = " ".join(keywords)
+    
+    # Fetch NASA ADS references using the user context
+    references = fetch_nasa_ads_references(ads_query)
 
     yield "🔄 Generating structured response using GPT-4o...", None, None, None, None
     
