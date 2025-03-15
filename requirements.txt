@@ -3,6 +3,7 @@ torch
 scikit-learn
 openai
 pinecone
+ragas
 python-docx
 astroquery
 pyvo
