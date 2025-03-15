@@ -210,7 +210,6 @@ def generate_response(user_input, science_objectives="", relevant_context="", re
         response_content = response.choices[0].message.content.strip()
         references_text = "\n\nADS References:\n" + "\n".join(
             [f"- {title} {authors} (Bibcode: {bibcode}) {pub} {pubdate}" for title, abstract, authors, bibcode, pub, pubdate in references])
-        )
         return f"{response_content}\n{references_text}"
     
     return response.choices[0].message.content.strip()
