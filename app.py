@@ -421,7 +421,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     # Export response to Word
     word_doc_path = export_to_word(
-        response, subdomain, user_input, context, 
+        full_response, subdomain, user_input, context, 
         max_tokens, temperature, top_p, frequency_penalty, presence_penalty
     )
 
@@ -432,7 +432,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     data_insights = generate_data_insights(user_input, exoplanet_data)
 
     # Extract GPT-generated table into DataFrame
-    extracted_table_df = gpt_response_to_dataframe(response)
+    extracted_table_df = gpt_response_to_dataframe(full_response)
 
     # Combine response and insights
     full_response = f"{full_response}\n\nEnd of Response"
