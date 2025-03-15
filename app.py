@@ -18,6 +18,8 @@ import pandas as pd
 from pinecone import Pinecone
 import logging
 import re
+from ragas import evaluate
+from ragas.metrics import faithfulness, groundedness, answer_relevance
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -204,15 +206,21 @@ def generate_response(user_input, science_objectives="", relevant_context="", re
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty
     )
-    
-    # Append references to the response
+
+    response_only = response.choices[0].message.content.strip()
+
+    # ADS References appended separately
+    references_text = ""
     if references:
-        response_content = response.choices[0].message.content.strip()
         references_text = "\n\nADS References:\n" + "\n".join(
-            [f"- {title} {authors} (Bibcode: {bibcode}) {pub} {pubdate}" for title, abstract, authors, bibcode, pub, pubdate in references])
-        return f"{response_content}\n{references_text}"
-    
-    return response.choices[0].message.content.strip()
+            [f"- {title} {authors} (Bibcode: {bibcode}) {pub} {pubdate}" 
+             for title, abstract, authors, bibcode, pub, pubdate in references])
+
+    # Full response (for Gradio display)
+    full_response = response_only + references_text
+
+    # Return two clearly separated responses
+    return full_response, response_only
 
 def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperature=0.3):
     """
@@ -393,7 +401,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield "🔄 Generating structured response using GPT-4o...", None, None, None, None
     
     # Generate response from GPT-4
-    response = generate_response(
+    full_response, response_only = generate_response(
         user_input=user_input,
         science_objectives=science_objectives,  
         relevant_context=relevant_context,
@@ -409,7 +417,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     
     # Append user-defined science objectives if provided
     if science_objectives.strip():
-        response = f"### Science Objectives (User-Defined):\n\n{science_objectives}\n\n" + response
+        full_response = f"### Science Objectives (User-Defined):\n\n{science_objectives}\n\n" + full_response
 
     # Export response to Word
     word_doc_path = export_to_word(
@@ -427,7 +435,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     extracted_table_df = gpt_response_to_dataframe(response)
 
     # Combine response and insights
-    full_response = f"{response}\n\nEnd of Response"
+    full_response = f"{full_response}\n\nEnd of Response"
 
     yield "SCDD produced successfully ✅", None, None, None, None
 
