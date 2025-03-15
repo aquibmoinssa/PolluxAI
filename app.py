@@ -19,7 +19,7 @@ from pinecone import Pinecone
 import logging
 import re
 from ragas import evaluate
-from ragas.metrics import faithfulness, groundedness, answer_relevance
+from ragas.metrics import Faithfulness, ResponseRelevancy
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
