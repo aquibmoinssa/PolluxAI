@@ -380,16 +380,16 @@ def gpt_response_to_dataframe(gpt_response):
 def chatbot(user_input, science_objectives="", context="", subdomain="", max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
 
     
-    yield "🔄 Connecting with Pinecone...", None, None, None, None
+    yield "🔄 Connecting with Pinecone...", None, None, None, None, None
     
     pc_index_name = "scdd-index"
-    yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None
+    yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None, None
 
-    yield "🔎 Retrieving relevant context from Pinecone...", None, None, None, None
+    yield "🔎 Retrieving relevant context from Pinecone...", None, None, None, None, None
     # Retrieve relevant context using Pinecone
     relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
 
-    yield "Context Retrieved successfully ✅ ", None, None, None, None
+    yield "Context Retrieved successfully ✅ ", None, None, None, None, None
 
     keywords = extract_keywords_with_gpt(context)
 
@@ -398,7 +398,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     # Fetch NASA ADS references using the user context
     references = fetch_nasa_ads_references(ads_query)
 
-    yield "🔄 Generating structured response using GPT-4o...", None, None, None, None
+    yield "🔄 Generating structured response using GPT-4o...", None, None, None, None, None
     
     # Generate response from GPT-4
     full_response, response_only = generate_response(
@@ -413,7 +413,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         presence_penalty=presence_penalty
     )
     
-    yield "Response generated successfully ✅ ", None, None, None, None
+    yield "Response generated successfully ✅ ", None, None, None, None, None
     
     # Append user-defined science objectives if provided
     if science_objectives.strip():
@@ -425,7 +425,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         max_tokens, temperature, top_p, frequency_penalty, presence_penalty
     )
 
-    yield "Writing SCDD...", None, None, None, None
+    yield "Writing SCDD...", None, None, None, None, None
     
     # Fetch exoplanet data and generate insights
     exoplanet_data = fetch_exoplanet_data()
@@ -437,7 +437,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     # Combine response and insights
     full_response = f"{full_response}\n\nEnd of Response"
 
-    yield "SCDD produced successfully ✅", None, None, None, None
+    yield "SCDD produced successfully ✅", None, None, None, None, None
 
     iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
@@ -478,7 +478,7 @@ with gr.Blocks() as demo:
 
     submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
 
-    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
+    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
 
 demo.launch(share=True)
 
