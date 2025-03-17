@@ -385,7 +385,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     pc_index_name = "scdd-index"
     yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None
 
-    yield "🔎 Retrieving relevant context...", None, None, None, None
+    yield "🔎 Retrieving relevant context from Pinecone...", None, None, None, None
     # Retrieve relevant context using Pinecone
     relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
 
@@ -442,7 +442,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
 
-    yield full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
+    yield full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
     gr.Markdown("# **ExosAI - NASA SMD PCRAG SCDD Generator [version-2.1]**")
@@ -466,6 +466,7 @@ with gr.Blocks() as demo:
     gr.Markdown("## **Model Outputs**")
     gr.Markdown("### **Accessing Pinecone vector database for context retrieval and generating response...**")
     full_response = gr.Textbox(label="ExosAI finds...")
+    relevant_context = gr.Textbox(label="Retrieved Context...")
     extracted_table_df = gr.Dataframe(label="SC Requirements Table")
     word_doc_path = gr.File(label="Download SCDD")
     iframe_html = gr.HTML(label="Miro")
@@ -475,9 +476,9 @@ with gr.Blocks() as demo:
         submit_button = gr.Button("Generate SCDD")
         clear_button = gr.Button("Reset")
 
-    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
+    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
 
-    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
+    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
 
 demo.launch(share=True)
 
