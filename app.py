@@ -82,6 +82,7 @@ Generate a **detailed and structured** response based on the given **retrieved c
 - **Estimate the "Number of Objects Observed" based on the observational strategy, parameters, instruments, statistical requirements, and feasibility.**
 - **Ensure that all parameters remain scientifically consistent.**
 - **Include inline references wherever available**. Especially in the Justification column.
+- **Pay attention to the retrieved context**.
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
 
@@ -100,7 +101,7 @@ def encode_query(text):
 
 
 # Context retrieval function using Pinecone
-def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=5):
+def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=3):
     query_text = f"Science Goal: {user_input}\nContext: {context_text}\nScience Objectives: {science_objectives}" if science_objectives else f"Science Goal: {user_input}\nContext: {context_text}"
     query_embedding = encode_query(query_text)
 
