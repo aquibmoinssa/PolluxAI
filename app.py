@@ -100,7 +100,7 @@ def encode_query(text):
 
 
 # Context retrieval function using Pinecone
-def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=3):
+def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=5):
     query_text = f"Science Goal: {user_input}\nContext: {context_text}\nScience Objectives: {science_objectives}" if science_objectives else f"Science Goal: {user_input}\nContext: {context_text}"
     query_embedding = encode_query(query_text)
 
@@ -419,6 +419,8 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     
     # Fetch NASA ADS references using the user context
     references = fetch_nasa_ads_references(ads_query)
+
+    yield "ADS references retrieved... ✅ ", None, None, None, None, None, None, None
     
 
     yield "🔄 Generating structured response using GPT-4o...", None, None, None, None, None, None
@@ -436,9 +438,11 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         presence_penalty=presence_penalty
     )
 
+    # RAGAS Evaluation
+    
     context_ragas = cleaned_context_list
     response_ragas = response_only
-    query_ragas = context
+    query_ragas = user_input + context
     reference_ragas = "\n\n".join([f"{title}\n{abstract}" for title, abstract, _, _, _, _ in references])
 
     dataset = []
@@ -468,7 +472,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         max_tokens, temperature, top_p, frequency_penalty, presence_penalty
     )
 
-    yield "Writing SCDD...", None, None, None, None, None, None
+    yield "Writing SCDD...Performing RAGAS Evaluation...", None, None, None, None, None, None
     
     # Fetch exoplanet data and generate insights
     exoplanet_data = fetch_exoplanet_data()
