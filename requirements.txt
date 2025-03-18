@@ -4,6 +4,7 @@ scikit-learn
 openai
 pinecone
 ragas
+langchain-openai
 python-docx
 astroquery
 pyvo
