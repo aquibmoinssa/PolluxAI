@@ -18,8 +18,16 @@ import pandas as pd
 from pinecone import Pinecone
 import logging
 import re
+
+from langchain_openai import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
+llm = ChatOpenAI(model="gpt-4o")
+embeddings = OpenAIEmbeddings()
+from ragas import EvaluationDataset
 from ragas import evaluate
-from ragas.metrics import Faithfulness, ResponseRelevancy
+from ragas.llms import LangchainLLMWrapper
+evaluator_llm = LangchainLLMWrapper(llm)
+from ragas.metrics import LLMContextRecall, ContextRelevance, Faithfulness, ResponseRelevancy, FactualCorrectness
 
 # Load the NASA-specific bi-encoder model and tokenizer
 bi_encoder_model_name = "nasa-impact/nasa-smd-ibm-st-v2"
@@ -43,7 +51,7 @@ index = pc.Index(index_name)
 system_message = """
 You are ExosAI, an advanced assistant specializing in Exoplanet and Astrophysics research.
 
-Generate a **detailed and structured** response based on the given **science context and user input**, incorporating key **observables, physical parameters, and technical requirements**. Organize the response into the following sections:
+Generate a **detailed and structured** response based on the given **retrieved context and user input**, incorporating key **observables, physical parameters, and technical requirements**. Organize the response into the following sections:
 
 1. **Science Objectives**: Define key scientific objectives related to the science context and user input.
 2. **Physical Parameters**: Outline the relevant physical parameters (e.g., mass, temperature, composition).
@@ -109,6 +117,17 @@ def retrieve_relevant_context(user_input, context_text, science_objectives="", t
         return "No relevant context found for the query."
 
     return retrieved_context
+
+def clean_retrieved_context(raw_context):
+    # Remove unnecessary line breaks within paragraphs
+    cleaned = raw_context.replace("-\n", "").replace("\n", " ")
+
+    # Remove extra spaces clearly
+    cleaned = re.sub(r'\s+', ' ', cleaned)
+
+    # Return explicitly cleaned context
+    return cleaned.strip()
+
 
 def extract_keywords_with_gpt(context, max_tokens=100, temperature=0.3):
     
@@ -380,16 +399,19 @@ def gpt_response_to_dataframe(gpt_response):
 def chatbot(user_input, science_objectives="", context="", subdomain="", max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
 
     
-    yield "🔄 Connecting with Pinecone...", None, None, None, None, None
+    yield "🔄 Connecting with Pinecone...", None, None, None, None, None, None
     
     pc_index_name = "scdd-index"
-    yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None, None
+    yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None, None, None
 
-    yield "🔎 Retrieving relevant context from Pinecone...", None, None, None, None, None
+    yield "🔎 Retrieving relevant context from Pinecone...", None, None, None, None, None, None
     # Retrieve relevant context using Pinecone
     relevant_context = retrieve_relevant_context(user_input, context, science_objectives)
 
-    yield "Context Retrieved successfully ✅ ", None, None, None, None, None
+    cleaned_context_list = [clean_retrieved_context(chunk) for chunk in relevant_context]
+    
+
+    yield "Context Retrieved successfully ✅ ", None, None, None, None, None, None, None
 
     keywords = extract_keywords_with_gpt(context)
 
@@ -397,8 +419,9 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     
     # Fetch NASA ADS references using the user context
     references = fetch_nasa_ads_references(ads_query)
+    
 
-    yield "🔄 Generating structured response using GPT-4o...", None, None, None, None, None
+    yield "🔄 Generating structured response using GPT-4o...", None, None, None, None, None, None
     
     # Generate response from GPT-4
     full_response, response_only = generate_response(
@@ -412,8 +435,28 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty
     )
+
+    context_ragas = cleaned_context_list
+    response_ragas = response_only
+    query_ragas = context
+    reference_ragas = "\n\n".join([f"{title}\n{abstract}" for title, abstract, _, _, _, _ in references])
+
+    dataset = []
+
+    dataset.append(
+        {
+            "user_input":query_ragas,
+            "retrieved_contexts":context_ragas,
+            "response":response_ragas,
+            "reference":reference_ragas
+        }
+    )
+
+    evaluation_dataset = EvaluationDataset.from_list(dataset)
+
+    ragas_evaluation = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), ContextRelevance(), Faithfulness(), ResponseRelevancy(), FactualCorrectness(coverage="high",atomicity="high")],llm=evaluator_llm, embeddings=embeddings)
     
-    yield "Response generated successfully ✅ ", None, None, None, None, None
+    yield "Response generated successfully ✅ ", None, None, None, None, None, None
     
     # Append user-defined science objectives if provided
     if science_objectives.strip():
@@ -425,7 +468,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
         max_tokens, temperature, top_p, frequency_penalty, presence_penalty
     )
 
-    yield "Writing SCDD...", None, None, None, None, None
+    yield "Writing SCDD...", None, None, None, None, None, None
     
     # Fetch exoplanet data and generate insights
     exoplanet_data = fetch_exoplanet_data()
@@ -437,12 +480,12 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     # Combine response and insights
     full_response = f"{full_response}\n\nEnd of Response"
 
-    yield "SCDD produced successfully ✅", None, None, None, None, None
+    yield "SCDD produced successfully ✅", None, None, None, None, None, None
 
     iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
 
-    yield full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
+    yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
     gr.Markdown("# **ExosAI - NASA SMD PCRAG SCDD Generator [version-2.1]**")
@@ -467,6 +510,7 @@ with gr.Blocks() as demo:
     gr.Markdown("### **Accessing Pinecone vector database for context retrieval and generating response...**")
     full_response = gr.Textbox(label="ExosAI finds...")
     relevant_context = gr.Textbox(label="Retrieved Context...")
+    ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
     extracted_table_df = gr.Dataframe(label="SC Requirements Table")
     word_doc_path = gr.File(label="Download SCDD")
     iframe_html = gr.HTML(label="Miro")
@@ -476,9 +520,9 @@ with gr.Blocks() as demo:
         submit_button = gr.Button("Generate SCDD")
         clear_button = gr.Button("Reset")
 
-    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
+    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
 
-    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", "", None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
+    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", "", None, None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
 
 demo.launch(share=True)
 
