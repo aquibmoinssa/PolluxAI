@@ -78,7 +78,7 @@ Generate a **detailed and structured** response based on the given **retrieved c
 - **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
 - **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**.
-- **Contrast Ratio:** Limit contrast ratio to the range **10^4 - 10^6**.
+- **Contrast Ratio:** come up with an appropriate contrast ratio depending on the requirements **.
 - **Estimate the "Number of Objects Observed" based on the observational strategy, parameters, instruments, statistical requirements, and feasibility.**
 - **Ensure that all parameters remain scientifically consistent.**
 - **Include inline references wherever available**. Especially in the Justification column.
@@ -512,8 +512,7 @@ with gr.Blocks() as demo:
     presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
 
     gr.Markdown("## **Model Outputs**")
-    gr.Markdown("### **Accessing Pinecone vector database for context retrieval and generating response...**")
-    full_response = gr.Textbox(label="ExosAI finds...")
+    full_response = gr.Textbox(label="ExosAI SCDD Generation...")
     relevant_context = gr.Textbox(label="Retrieved Context...")
     ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
     extracted_table_df = gr.Dataframe(label="SC Requirements Table")
