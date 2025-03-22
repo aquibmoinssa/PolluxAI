@@ -367,7 +367,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     yield "Context Retrieved successfully ✅ ", None, None, None, None, None, None, None
 
-    keywords = extract_keywords_with_gpt(context)
+    keywords = extract_keywords_with_gpt(context, client)
 
     ads_query = " ".join(keywords)
     
