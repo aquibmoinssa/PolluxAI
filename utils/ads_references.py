@@ -1,5 +1,7 @@
 from astroquery.nasa_ads import ADS
 
+ADS.TOKEN = os.getenv('ADS_API_KEY')
+
 
 def extract_keywords_with_gpt(context, client, max_tokens=100, temperature=0.3):
     
