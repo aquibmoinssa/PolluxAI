@@ -1,3 +1,24 @@
+def extract_keywords_with_gpt(context, max_tokens=100, temperature=0.3):
+    
+    keyword_prompt = f"Extract 3 most important scientific keywords from the following user query:\n\n{context}"
+    
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an expert in identifying key scientific terms and concepts."},
+            {"role": "user", "content": keyword_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature
+    )
+    
+    extracted_keywords = response.choices[0].message.content.strip()
+    
+    cleaned_keywords = re.sub(r'\d+\.\s*', '', extracted_keywords)
+
+    keywords_list = [kw.strip() for kw in cleaned_keywords.split("\n") if kw.strip()]
+    
+    return keywords_list
 
 def fetch_nasa_ads_references(ads_query):
     """Fetch relevant NASA ADS papers and format them for readability."""
@@ -26,24 +47,3 @@ def fetch_nasa_ads_references(ads_query):
         logging.error(f"Error fetching ADS references: {str(e)}")
         return [("Error fetching references", "See logs for details", "N/A", "N/A", "N/A", "N/A")]
 
-def extract_keywords_with_gpt(context, max_tokens=100, temperature=0.3):
-    
-    keyword_prompt = f"Extract 3 most important scientific keywords from the following user query:\n\n{context}"
-    
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are an expert in identifying key scientific terms and concepts."},
-            {"role": "user", "content": keyword_prompt}
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature
-    )
-    
-    extracted_keywords = response.choices[0].message.content.strip()
-    
-    cleaned_keywords = re.sub(r'\d+\.\s*', '', extracted_keywords)
-
-    keywords_list = [kw.strip() for kw in cleaned_keywords.split("\n") if kw.strip()]
-    
-    return keywords_list
