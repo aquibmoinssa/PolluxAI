@@ -1,8 +1,5 @@
 from astroquery.nasa_ads import ADS
 
-ADS.TOKEN = os.getenv('ADS_API_KEY')
-
-
 def extract_keywords_with_gpt(context, client, max_tokens=100, temperature=0.3):
     
     keyword_prompt = f"Extract 3 most important scientific keywords from the following user query:\n\n{context}"
@@ -27,6 +24,7 @@ def extract_keywords_with_gpt(context, client, max_tokens=100, temperature=0.3):
 
 def fetch_nasa_ads_references(ads_query):
     """Fetch relevant NASA ADS papers and format them for readability."""
+    ADS.TOKEN = os.getenv('ADS_API_KEY')
     try:
         # Query NASA ADS for relevant papers
         papers = ADS.query_simple(ads_query)
