@@ -12,14 +12,14 @@ from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
 import io
 import tempfile
-#from astroquery.nasa_ads import ADS
-import pyvo as vo
+#import pyvo as vo
 import pandas as pd
 from pinecone import Pinecone
 import logging
 import re
 
 from utils.ads_references import extract_keywords_with_gpt, fetch_nasa_ads_references 
+from utils.data_insights import fetch_exoplanet_data, generate_data_insights
 
 
 from langchain_openai import ChatOpenAI
@@ -40,9 +40,6 @@ bi_model = AutoModel.from_pretrained(bi_encoder_model_name)
 # Set up OpenAI client
 api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
-
-# Set up NASA ADS token
-#ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
 
 # Pinecone setup
 pinecone_api_key = os.getenv('PINECONE_API_KEY')
@@ -132,24 +129,6 @@ def clean_retrieved_context(raw_context):
     # Return explicitly cleaned context
     return cleaned.strip()
 
-def fetch_exoplanet_data():
-    # Connect to NASA Exoplanet Archive TAP Service
-    tap_service = vo.dal.TAPService("https://exoplanetarchive.ipac.caltech.edu/TAP")
-
-    # Query to fetch all columns from the pscomppars table
-    ex_query = """
-        SELECT TOP 10 pl_name, hostname, sy_snum, sy_pnum, discoverymethod, disc_year, disc_facility, pl_controv_flag, pl_orbper, pl_orbsmax, pl_rade, pl_bmasse, pl_orbeccen, pl_eqt, st_spectype, st_teff, st_rad, st_mass, ra, dec, sy_vmag
-        FROM pscomppars
-    """
-    # Execute the query
-    qresult = tap_service.search(ex_query)
-
-    # Convert to a Pandas DataFrame
-    ptable = qresult.to_table()
-    exoplanet_data = ptable.to_pandas()
-
-    return exoplanet_data
-
 def generate_response(user_input, science_objectives="", relevant_context="", references=[], max_tokens=150, temperature=0.7, top_p=0.9, frequency_penalty=0.5, presence_penalty=0.0):
     # Case 1: Both relevant context and science objectives are provided
     if relevant_context and science_objectives.strip():
@@ -194,37 +173,6 @@ def generate_response(user_input, science_objectives="", relevant_context="", re
 
     # Return two clearly separated responses
     return full_response, response_only
-
-def generate_data_insights(user_input, exoplanet_data, max_tokens=500, temperature=0.3):
-    """
-    Generate insights by passing the user's input along with the exoplanet data to GPT-4.
-    """
-    # Convert the dataframe to a readable format for GPT (e.g., CSV-style text)
-    data_as_text = exoplanet_data.to_csv(index=False)  # CSV-style for better readability
-
-    # Create a prompt with the user query and the data sample
-    insights_prompt = (
-        f"Analyze the following user query and provide relevant insights based on the provided exoplanet data.\n\n"
-        f"User Query: {user_input}\n\n"
-        f"Exoplanet Data:\n{data_as_text}\n\n"
-        f"Please provide insights that are relevant to the user's query."
-    )
-    
-    # Call GPT-4 to generate insights based on the data and user input
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are an expert in analyzing astronomical data and generating insights."},
-            {"role": "user", "content": insights_prompt}
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature
-    )
-    
-    # Extract and return GPT-4's insights
-    data_insights = response.choices[0].message.content.strip()
-    return data_insights
-
 
 def export_to_word(response_content, subdomain_definition, science_goal, context, max_tokens, temperature, top_p, frequency_penalty, presence_penalty):
     doc = Document()
@@ -430,7 +378,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     
     # Fetch exoplanet data and generate insights
     exoplanet_data = fetch_exoplanet_data()
-    data_insights = generate_data_insights(user_input, exoplanet_data)
+    data_insights_uq = generate_data_insights(user_input, client, exoplanet_data)
 
     # Extract GPT-generated table into DataFrame
     extracted_table_df = gpt_response_to_dataframe(full_response)
