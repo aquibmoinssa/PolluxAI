@@ -19,7 +19,7 @@ from pinecone import Pinecone
 import logging
 import re
 
-from utils.ads_references import extract_keywords_with_gpt, fetch_nasa_ads_references, 
+from utils.ads_references import extract_keywords_with_gpt, fetch_nasa_ads_references 
 
 
 from langchain_openai import ChatOpenAI
