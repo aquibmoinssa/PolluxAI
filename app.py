@@ -9,7 +9,7 @@ import io
 import pandas as pd
 from pinecone import Pinecone
 #import logging
-#import re
+import re
 
 from utils.ads_references import extract_keywords_with_gpt, fetch_nasa_ads_references 
 from utils.data_insights import fetch_exoplanet_data, generate_data_insights
