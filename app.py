@@ -12,7 +12,7 @@ from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
 import io
 import tempfile
-from astroquery.nasa_ads import ADS
+#from astroquery.nasa_ads import ADS
 import pyvo as vo
 import pandas as pd
 from pinecone import Pinecone
@@ -42,7 +42,7 @@ api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 # Set up NASA ADS token
-ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
+#ADS.TOKEN = os.getenv('ADS_API_KEY')  # Ensure your ADS API key is stored in environment variables
 
 # Pinecone setup
 pinecone_api_key = os.getenv('PINECONE_API_KEY')
