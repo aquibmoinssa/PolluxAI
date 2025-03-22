@@ -1,3 +1,6 @@
+from astroquery.nasa_ads import ADS
+
+
 def extract_keywords_with_gpt(context, client, max_tokens=100, temperature=0.3):
     
     keyword_prompt = f"Extract 3 most important scientific keywords from the following user query:\n\n{context}"
