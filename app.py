@@ -72,12 +72,12 @@ Generate a **detailed and structured** response based on the given **retrieved c
 - **Wavelength Limits:** Prioritize wavelengths between **100 nanometers (nm) and 3 micrometers (μm)**.
 - **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
 - **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
-- **Spectral Resolution Constraint:** Limit spectral resolution (**R**) to the range **10,000 – 50,000**.
+- **Spectral Resolution Constraint:** come up with an appropriate spectral resolution (**R**) depending on the requirements **.
 - **Contrast Ratio:** come up with an appropriate contrast ratio depending on the requirements **.
 - **Estimate the "Number of Objects Observed" based on the observational strategy, parameters, instruments, statistical requirements, and feasibility.**
 - **Ensure that all parameters remain scientifically consistent.**
-- **Include inline references wherever available**. Especially in the Justification column.
-- **Pay attention to the retrieved context**.
+- **Include inline references in the Justification column wherever available **.
+- **Pay close attention to the retrieved context**.
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
 
