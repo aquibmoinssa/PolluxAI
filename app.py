@@ -96,7 +96,7 @@ def encode_query(text):
 
 
 # Context retrieval function using Pinecone
-def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=3):
+def retrieve_relevant_context(user_input, context_text, science_objectives="", top_k=5):
     query_text = f"Science Goal: {user_input}\nContext: {context_text}\nScience Objectives: {science_objectives}" if science_objectives else f"Science Goal: {user_input}\nContext: {context_text}"
     query_embedding = encode_query(query_text)
 
@@ -231,7 +231,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     evaluation_dataset = EvaluationDataset.from_list(dataset)
 
-    ragas_evaluation = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), ContextRelevance(), Faithfulness(), ResponseRelevancy(), FactualCorrectness(coverage="high",atomicity="high")],llm=evaluator_llm, embeddings=embeddings)
+    ragas_evaluation = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), ContextRelevance(), Faithfulness(), ResponseRelevancy(), FactualCorrectness(coverage="low",atomicity="low")],llm=evaluator_llm, embeddings=embeddings)
     
     yield "Response generated successfully ✅ ", None, None, None, None, None, None
     
