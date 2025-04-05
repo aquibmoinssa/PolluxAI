@@ -225,7 +225,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
             "user_input":query_ragas,
             "retrieved_contexts":context_ragas,
             "response":response_ragas,
-            "reference":context_ragas
+            "reference": []
         }
     )
 
