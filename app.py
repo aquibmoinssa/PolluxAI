@@ -265,40 +265,94 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# **ExosAI - NASA SMD PCRAG SCDD Generator [version-2.1]**")
+    gr.Markdown("# **The AKSIES Platform [version-0.1]**")
 
-    gr.Markdown("## **User Inputs**")
-    user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
-    context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Additional Context")
-    subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
+    with gr.Tabs():
+        # ===== Tab 1: Original =====
+        with gr.Tab("SCDD-GEN"):
+            gr.Markdown("## **User Inputs**")
+            user_input = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
+            context = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Additional Context")
+            subdomain = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
 
-    science_objectives_button = gr.Button("User-defined Science Objectives [Optional]")
-    science_objectives_input = gr.Textbox(lines=5, placeholder="Enter Science Objectives...", label="Science Objectives", visible=False)
-    science_objectives_button.click(lambda: gr.update(visible=True), outputs=[science_objectives_input])
+            science_objectives_button = gr.Button("User-defined Science Objectives [Optional]")
+            science_objectives_input = gr.Textbox(lines=5, placeholder="Enter Science Objectives...", label="Science Objectives", visible=False)
+            science_objectives_button.click(lambda: gr.update(visible=True), outputs=[science_objectives_input])
 
-    gr.Markdown("### **Model Parameters**")
-    max_tokens = gr.Slider(50, 2000, 150, step=10, label="Max Tokens")
-    temperature = gr.Slider(0.0, 1.0, 0.7, step=0.1, label="Temperature")
-    top_p = gr.Slider(0.0, 1.0, 0.9, step=0.1, label="Top-p")
-    frequency_penalty = gr.Slider(0.0, 1.0, 0.5, step=0.1, label="Frequency Penalty")
-    presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
+            gr.Markdown("### **Model Parameters**")
+            max_tokens = gr.Slider(50, 2000, 150, step=10, label="Max Tokens")
+            temperature = gr.Slider(0.0, 1.0, 0.7, step=0.1, label="Temperature")
+            top_p = gr.Slider(0.0, 1.0, 0.9, step=0.1, label="Top-p")
+            frequency_penalty = gr.Slider(0.0, 1.0, 0.5, step=0.1, label="Frequency Penalty")
+            presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
 
-    gr.Markdown("## **Model Outputs**")
-    full_response = gr.Textbox(label="ExosAI SCDD Generation...")
-    relevant_context = gr.Textbox(label="Retrieved Context...")
-    ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
-    extracted_table_df = gr.Dataframe(label="SC Requirements Table")
-    word_doc_path = gr.File(label="Download SCDD")
-    iframe_html = gr.HTML(label="Miro")
-    mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
+            gr.Markdown("## **Model Outputs**")
+            full_response = gr.Textbox(label="ExosAI SCDD Generation...")
+            relevant_context = gr.Textbox(label="Retrieved Context...")
+            ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
+            extracted_table_df = gr.Dataframe(label="SC Requirements Table")
+            word_doc_path = gr.File(label="Download SCDD")
+            iframe_html = gr.HTML(label="Miro")
+            mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
 
-    with gr.Row():
-        submit_button = gr.Button("Generate SCDD")
-        clear_button = gr.Button("Reset")
+            with gr.Row():
+                submit_button = gr.Button("Generate SCDD")
+                clear_button = gr.Button("Reset")
 
-    submit_button.click(chatbot, inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty], outputs=[full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],queue=True)
+            submit_button.click(
+                chatbot,
+                inputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty],
+                outputs=[full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html],
+                queue=True
+            )
 
-    clear_button.click(lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", "", None, None, None, None, None), outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html])
+            clear_button.click(
+                lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", "", None, None, None, None, None),
+                outputs=[user_input, science_objectives_input, context, subdomain, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html]
+            )
+
+        # ===== Tab 2: Duplicate for testing =====
+        with gr.Tab("SCDD-GEN (Test)"):
+            gr.Markdown("## **User Inputs**")
+            user_input_2 = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
+            context_2 = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Additional Context")
+            subdomain_2 = gr.Textbox(lines=2, placeholder="Define your Subdomain...", label="Subdomain Definition")
+
+            science_objectives_button_2 = gr.Button("User-defined Science Objectives [Optional]")
+            science_objectives_input_2 = gr.Textbox(lines=5, placeholder="Enter Science Objectives...", label="Science Objectives", visible=False)
+            science_objectives_button_2.click(lambda: gr.update(visible=True), outputs=[science_objectives_input_2])
+
+            gr.Markdown("### **Model Parameters**")
+            max_tokens_2 = gr.Slider(50, 2000, 150, step=10, label="Max Tokens")
+            temperature_2 = gr.Slider(0.0, 1.0, 0.7, step=0.1, label="Temperature")
+            top_p_2 = gr.Slider(0.0, 1.0, 0.9, step=0.1, label="Top-p")
+            frequency_penalty_2 = gr.Slider(0.0, 1.0, 0.5, step=0.1, label="Frequency Penalty")
+            presence_penalty_2 = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
+
+            gr.Markdown("## **Model Outputs**")
+            full_response_2 = gr.Textbox(label="ExosAI SCDD Generation...")
+            relevant_context_2 = gr.Textbox(label="Retrieved Context...")
+            ragas_evaluation_2 = gr.Textbox(label="RAGAS Evaluation...")
+            extracted_table_df_2 = gr.Dataframe(label="SC Requirements Table")
+            word_doc_path_2 = gr.File(label="Download SCDD")
+            iframe_html_2 = gr.HTML(label="Miro")
+            mapify_button_html_2 = gr.HTML(label="Generate Mind Map on Mapify")
+
+            with gr.Row():
+                submit_button_2 = gr.Button("Generate SCDD")
+                clear_button_2 = gr.Button("Reset")
+
+            submit_button_2.click(
+                chatbot,
+                inputs=[user_input_2, science_objectives_input_2, context_2, subdomain_2, max_tokens_2, temperature_2, top_p_2, frequency_penalty_2, presence_penalty_2],
+                outputs=[full_response_2, relevant_context_2, ragas_evaluation_2, extracted_table_df_2, word_doc_path_2, iframe_html_2, mapify_button_html_2],
+                queue=True
+            )
+
+            clear_button_2.click(
+                lambda: ("", "", "", "", 150, 0.7, 0.9, 0.5, 0.0, "", "", None, None, None, None, None),
+                outputs=[user_input_2, science_objectives_input_2, context_2, subdomain_2, max_tokens_2, temperature_2, top_p_2, frequency_penalty_2, presence_penalty_2, full_response_2, relevant_context_2, ragas_evaluation_2, extracted_table_df_2, word_doc_path_2, iframe_html_2, mapify_button_html_2]
+            )
 
 demo.launch(share=True)
 
