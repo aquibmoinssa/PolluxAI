@@ -175,7 +175,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield "🔄 Connecting with Pinecone...", None, None, None, None, None, None
     
     pc_index_name = "scdd-index"
-    yield f"Using Pinecone index: **{index_name}**✅ ", None, None, None, None, None, None
+    yield f"Using Pinecone index: **{pc_index_name}**✅ ", None, None, None, None, None, None
 
     yield "🔎 Retrieving relevant context from Pinecone...", None, None, None, None, None, None
     # Retrieve relevant context using Pinecone
@@ -184,7 +184,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     cleaned_context_list = [clean_retrieved_context(chunk) for chunk in relevant_context]
     
 
-    yield "Context Retrieved successfully ✅ ", None, None, None, None, None, None, None
+    yield "Context Retrieved successfully ✅ ", None, None, None, None, None, None
 
     keywords = extract_keywords_with_gpt(context, client)
 
@@ -193,7 +193,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     # Fetch NASA ADS references using the user context
     references = fetch_nasa_ads_references(ads_query)
 
-    yield "ADS references retrieved... ✅ ", None, None, None, None, None, None, None
+    yield "ADS references retrieved... ✅ ", None, None, None, None, None, None
     
 
     yield "🔄 Generating structured response using GPT-4o...", None, None, None, None, None, None
