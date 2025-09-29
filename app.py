@@ -287,7 +287,7 @@ with gr.Blocks() as demo:
             presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
 
             gr.Markdown("## **Model Outputs**")
-            full_response = gr.Markup(label="PolluxAI Science Case Generation...")
+            full_response = gr.Markdown(label="PolluxAI Science Case Generation...")
             relevant_context = gr.Textbox(label="Retrieved Context...")
             ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
             extracted_table_df = gr.Dataframe(label="SC Requirements Table")
