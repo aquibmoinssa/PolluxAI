@@ -1,5 +1,5 @@
 ---
-title: AKSIES
+title: PolluxAI
 emoji: 📊
 colorFrom: indigo
 colorTo: blue
