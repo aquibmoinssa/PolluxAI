@@ -19,7 +19,7 @@ from utils.extract_table import extract_table_from_response, gpt_response_to_dat
 
 from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-4.1-mini")
 embeddings = OpenAIEmbeddings()
 from ragas import EvaluationDataset
 from ragas import evaluate
@@ -142,7 +142,7 @@ def generate_response(user_input, science_objectives="", relevant_context="", re
         combined_input = f"User Input: {user_input}\n\nPlease generate a full structured response, including Science Objectives."
     
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4.1",
         messages=[
             {"role": "system", "content": system_message},
             {"role": "user", "content": combined_input}
@@ -196,9 +196,9 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield "ADS references retrieved... ✅ ", None, None, None, None, None, None
     
 
-    yield "🔄 Generating structured response using GPT-4o...", None, None, None, None, None, None
+    yield "🔄 Generating structured response using GPT-4.1...", None, None, None, None, None, None
     
-    # Generate response from GPT-4
+    # Generate response from GPT-4.1
     full_response, response_only = generate_response(
         user_input=user_input,
         science_objectives=science_objectives,  
@@ -259,13 +259,13 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     yield "SCDD produced successfully ✅", None, None, None, None, None, None
 
-    iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
+    #iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
 
-    yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
+    yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# **The AKSIES Platform [version-0.1]**")
+    gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-0.1]**")
 
     with gr.Tabs():
         # ===== Tab 1: Original =====
@@ -287,16 +287,16 @@ with gr.Blocks() as demo:
             presence_penalty = gr.Slider(0.0, 1.0, 0.0, step=0.1, label="Presence Penalty")
 
             gr.Markdown("## **Model Outputs**")
-            full_response = gr.Textbox(label="ExosAI SCDD Generation...")
+            full_response = gr.Markup(label="PolluxAI Science Case Generation...")
             relevant_context = gr.Textbox(label="Retrieved Context...")
             ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
             extracted_table_df = gr.Dataframe(label="SC Requirements Table")
-            word_doc_path = gr.File(label="Download SCDD")
-            iframe_html = gr.HTML(label="Miro")
+            word_doc_path = gr.File(label="Download Science Case")
+            #iframe_html = gr.HTML(label="Miro")
             mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
 
             with gr.Row():
-                submit_button = gr.Button("Generate SCDD")
+                submit_button = gr.Button("Generate Science Case")
                 clear_button = gr.Button("Reset")
 
             submit_button.click(
@@ -312,7 +312,7 @@ with gr.Blocks() as demo:
             )
 
         # ===== Tab 2: Duplicate for testing =====
-        with gr.Tab("SCDD-GEN (Test)"):
+        with gr.Tab("PROP-GEN (Test)"):
             gr.Markdown("## **User Inputs**")
             user_input_2 = gr.Textbox(lines=5, placeholder="Enter your Science Goal...", label="Science Goal")
             context_2 = gr.Textbox(lines=10, placeholder="Enter Context Text...", label="Additional Context")
