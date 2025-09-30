@@ -292,7 +292,7 @@ with gr.Blocks() as demo:
             ragas_evaluation = gr.Textbox(label="RAGAS Evaluation...")
             extracted_table_df = gr.Dataframe(label="SC Requirements Table")
             word_doc_path = gr.File(label="Download Science Case")
-            #iframe_html = gr.HTML(label="Miro")
+            iframe_html = gr.HTML(label="Miro")
             mapify_button_html = gr.HTML(label="Generate Mind Map on Mapify")
 
             with gr.Row():
