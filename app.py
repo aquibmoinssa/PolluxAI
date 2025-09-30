@@ -259,10 +259,10 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
 
     yield "SCDD produced successfully ✅", None, None, None, None, None, None
 
-    #iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
+    iframe_html = """<iframe width=\"768\" height=\"432\" src=\"https://miro.com/app/live-embed/uXjVKuVTcF8=/?moveToViewport=-331,-462,5434,3063&embedId=710273023721\" frameborder=\"0\" scrolling=\"no\" allow=\"fullscreen; clipboard-read; clipboard-write\" allowfullscreen></iframe>"""
     mapify_button_html = """<a href=\"https://mapify.so/app/new\" target=\"_blank\"><button>Create Mind Map on Mapify</button></a>"""
 
-    yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, mapify_button_html
+    yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
     gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-0.1]**")
