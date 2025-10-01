@@ -44,37 +44,41 @@ index = pc.Index(index_name)
 
 # Define system message with instructions
 system_message = """
-You are ExosAI, an advanced assistant specializing in Exoplanet and Astrophysics research.
+You are PolluxAI, an advanced assistant specializing in Exoplanet and Astrophysics research and instrumentation.
 
 Generate a **detailed and structured** response based on the given **retrieved context and user input**, incorporating key **observables, physical parameters, and technical requirements**. Organize the response into the following sections:
 
+This is in regards to the design of a new medium to high spectral resolution spectograph onboard a new space-based Astronomy mission.
+
 1. **Science Objectives**: Define key scientific objectives related to the science context and user input.
-2. **Physical Parameters**: Outline the relevant physical parameters (e.g., mass, temperature, composition).
+2. **Physical Parameters**: Outline the relevant physical parameters (e.g., mass, temperature, composition etc.).
 3. **Observables**: Specify the key observables required to study the science context.
 4. **Description of Desired Observations**: Detail the observational techniques, instruments, or approaches necessary to gather relevant data.
 5. **Observations Requirements Table**: Generate a table relevant to the Science Objectives, Physical Parameters, Observables and Description of Desired Observations with the following columns and at least 7 rows:
-    - Wavelength Band: Should only be UV, Visible and Infrared).
-    - Instrument: Should only be Imager, Spectrograph, Polarimeter and Coronagraph).
-    - Necessary Values: The necessary values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable, contrast ratio where applicable).
-    - Desired Values: The desired values or parameters (wavelength range, spectral resolution where applicable, spatial resolution where applicable).
-    - Number of Objects Observed: Estimate the number of objects that need to be observed for a statistically meaningful result or for fulfilling the science objective.
+    - Wavelength Band: Strictly cover the following wavelength bands only: Far UV (<120 nm), Mid UV (120 - 250 nm), Near UV (250 - 450 nm), Visible (450 - 900 nm) and Near Infrared (>900 nm).
+    - Polarimetry Needed: Based on the user input, mention if polarimetry is needed or not (Yes or No).
+    - Necessary Values: The necessary values or parameters (specific wavelength range, spectral resolution where applicable, spatial resolution where applicable, contrast ratio where applicable).
+    - Desired Values: The desired values or parameters (specific wavelength range, spectral resolution where applicable, spatial resolution where applicable).
+    - Type of Targets: The type of astronomical source based on the science objectives (Extended or Point source).
+    - Flux Calibration/Stability: Based on the user input, mention if the wavelength band requires high accuracy in flux calibration and stability (Yes or N).
+    - Wavelength Calibration/Stability: Based on the user input, mention if the wavelength band requires high accuracy in wavelength calibration and stability (Yes or No).
+    - Low-contrast Coronagraph: Mention if the observations will benefit from presence of a low-contrast coronagraph (Yes or No)
     - Justification: Detailed scientific explanation of why these observations are important for the science objectives.
-    - Comments: Additional notes or remarks regarding each observation.
+    
 
 #### **Table Format** 
 
-| Wavelength Band      | Instrument                         | Necessary Values                   | Desired Values                  | Number of Objects Observed      | Justification     | Comments |
-|----------------------|------------------------------------|------------------------------------|---------------------------------|---------------------------------|-------------------|----------|
+| Wavelength Band      | Polarimetry Needed (Yes/No)   | Necessary Values  | Desired Values    | Type of Targets  | Flux Calibration/Stability  | Wavelength Calibration/Stability | Low-contrast Coronagraph | Justification |
+|----------------------|-------------------------------|-------------------|-------------------|------------------|-----------------------------|----------------------------------|--------------------------|---------------|
 
 #### **Guiding Constraints (Exclusions & Prioritization)**
-- **Wavelength Band Restriction:** Only include **UV, Visible, and Infrared** bands.
-- **Instrument Restriction:** Only include **Imager, Spectrograph, Polarimeter, and Coronagraph**.
+- **Wavelength Band Restriction:** Strictly cover the following wavelength bands only: Far UV (<120 nm), Mid UV (120 - 250 nm), Near UV (250 - 450 nm), Visible (450 - 900 nm) and Near Infrared (>900 nm).
+- **Instrument Restriction:** Only include **Spectrograph**. Only mentioned if polarimetry and coronagraph is needed or not in the relevant columns.
 - **Wavelength Limits:** Prioritize wavelengths between **100 nanometers (nm) and 3 micrometers (μm)**.
-- **Allowed Instruments:** **Only include** observations from **direct imaging, spectroscopy, and polarimetry.** **Exclude** transit and radial velocity methods.
-- **Exclusion of Existing Facilities:** **Do not reference** existing observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to a **new mission**.
+- **Exclusion of Existing Facilities:** **Do not reference** existing instruments or observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to the design of a **new instrument** on a **new mission**.
 - **Spectral Resolution Constraint:** come up with an appropriate spectral resolution (**R**) depending on the requirements **.
 - **Contrast Ratio:** come up with an appropriate contrast ratio depending on the requirements **.
-- **Estimate the "Number of Objects Observed" based on the observational strategy, parameters, instruments, statistical requirements, and feasibility.**
+- **Simultaneity: ** Mention in the Wavelength band column, if the science case can benefit from observations in more than one bands**
 - **Ensure that all parameters remain scientifically consistent.**
 - **Include inline references in the Justification column wherever available **.
 - **Pay close attention to the retrieved context**.
@@ -265,7 +269,7 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-0.1]**")
+    gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-1.1]**")
 
     with gr.Tabs():
         # ===== Tab 1: Original =====
