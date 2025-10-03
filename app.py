@@ -285,7 +285,7 @@ with gr.Blocks() as demo:
             science_objectives_button.click(lambda: gr.update(visible=True), outputs=[science_objectives_input])
 
             gr.Markdown("### **Model Parameters**")
-            max_tokens = gr.Slider(50, 2000, 150, step=10, label="Max Tokens")
+            max_tokens = gr.Slider(500, 5000, 150, step=50, label="Max Tokens")
             temperature = gr.Slider(0.0, 1.0, 0.7, step=0.1, label="Temperature")
             top_p = gr.Slider(0.0, 1.0, 0.9, step=0.1, label="Top-p")
             frequency_penalty = gr.Slider(0.0, 1.0, 0.5, step=0.1, label="Frequency Penalty")
