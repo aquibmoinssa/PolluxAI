@@ -359,5 +359,9 @@ with gr.Blocks() as demo:
                 outputs=[user_input_2, science_objectives_input_2, context_2, subdomain_2, max_tokens_2, temperature_2, top_p_2, frequency_penalty_2, presence_penalty_2, full_response_2, relevant_context_2, ragas_evaluation_2, extracted_table_df_2, word_doc_path_2, iframe_html_2, mapify_button_html_2]
             )
 
-demo.launch(share=True)
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get('PORT', 7860))  
+    demo.launch(server_name="0.0.0.0", server_port=port)
+
 
