@@ -270,7 +270,16 @@ def chatbot(user_input, science_objectives="", context="", subdomain="", max_tok
     yield full_response, relevant_context, ragas_evaluation, extracted_table_df, word_doc_path, iframe_html, mapify_button_html
 
 with gr.Blocks() as demo:
-    gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-1.1]**")
+    gr.HTML(
+    """
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <img src="https://huggingface.co/spaces/aquibmoin/PolluxAI/resolve/main/assets/pollux-logo.png" alt="logo" style="height:72px;">
+      <h1 style="margin:0;">PolluxAI: AI-RAG powered Knowledge Synthesis for Pollux Science Cases [version-1.1]</h1>
+    </div>
+    """
+    )
+    
+    # gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-1.1]**")
 
     with gr.Tabs():
         # ===== Tab 1: Original =====
