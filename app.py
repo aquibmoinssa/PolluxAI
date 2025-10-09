@@ -278,8 +278,7 @@ with gr.Blocks() as demo:
     </div>
     """
     )
-    
-    # gr.Markdown("# **PolluxAI: AI-powered Knowledge Synthesis for Pollux Science Cases [version-1.1]**")
+    gr.Markdown("### **Developed by Aquib Moin [aquibmoin@gmail.com]**")
 
     with gr.Tabs():
         # ===== Tab 1: Original =====
