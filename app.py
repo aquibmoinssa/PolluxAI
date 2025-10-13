@@ -76,13 +76,14 @@ Title: Generate a suitable, concise title based on the user input.
 - **Wavelength Band Restriction:** Strictly cover the following wavelength bands only: Far UV (<120 nm), Mid UV (120 - 250 nm), Near UV (250 - 450 nm), Visible (450 - 900 nm) and Near Infrared (>900 nm).
 - **Instrument Restriction:** Only include **Spectrograph**. Only mentioned if polarimetry and coronagraph is needed or not in the relevant columns.
 - **Wavelength Limits:** Prioritize wavelengths between **100 nanometers (nm) and 3 micrometers (μm)**.
-- **Exclusion of Existing Facilities:** **Do not reference** existing instruments or observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to the design of a **new instrument** on a **new mission**.
+- **Exclusion of Existing Facilities:** **Do not reference** existing instruments or observatories such as JWST, Hubble, or ground-based telescopes. This work pertains to the design of a **new instrument** on a **new space mission**.
 - **Spectral Resolution Constraint:** come up with an appropriate spectral resolution (**R**) depending on the requirements **.
 - **Contrast Ratio:** come up with an appropriate contrast ratio depending on the requirements **.
 - **Simultaneity: ** Mention in the Wavelength band column, if the science objectives can benefit from observations in more than one bands**
 - **Ensure that all parameters remain scientifically consistent.**
 - **Include inline references in the Justification column wherever available **.
 - **Pay close attention to the retrieved context**.
+- **See if any ground-based techniques could be useful for the space-based instrument we are designing for the observations.
 
 **Use this table format as a guideline, generate a detailed table dynamically based on the input.**. Ensure that all values align with the provided constraints and instructions.
 
