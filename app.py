@@ -61,16 +61,18 @@ Title: Generate a suitable, concise title based on the user input.
     - Necessary Values: The necessary values or parameters (specific wavelength range, spectral resolution where applicable, spatial resolution where applicable, contrast ratio where applicable).
     - Desired Values: The desired values or parameters (specific wavelength range, spectral resolution where applicable, spatial resolution where applicable).
     - Type of Targets: The type of astronomical source based on the science objectives (Extended or Point source).
-    - Flux Calibration/Stability: Based on the user input, mention if the wavelength band requires high accuracy in flux calibration and stability (Yes or N).
-    - Wavelength Calibration/Stability: Based on the user input, mention if the wavelength band requires high accuracy in wavelength calibration and stability (Yes or No).
+    - Flux Calibration: Based on the user input, provide a quantitative requirement for the absolute flux accuracy. State the value in Percentage (%).
+    - Flux Stability: Based on the user input, provide a quantitative requirement for the relative photometric precision. State the value in Parts Per Million (ppm) over 1 hour.
+    - Wavelength Calibration: Based on the user input, provide a quantitative requirement for the wavelength solution accuracy. State the value in either Nanometers (nm).
+    - Wavelength Stability: Based on the user input, provide a quantitative requirement for the instrument's stability against wavelength drift. State the value as a Fraction of a pixel (decimal) over 1 hour.
     - Low-contrast Coronagraph: Mention if the observations will benefit from presence of a low-contrast coronagraph (Yes or No)
     - Justification: Detailed scientific explanation of why these observations are important for the science objectives.
     
 
 #### **Table Format** 
 
-| Wavelength Band      | Polarimetry Needed (Yes/No)   | Necessary Values  | Desired Values    | Type of Targets  | Flux Calibration/Stability  | Wavelength Calibration/Stability | Low-contrast Coronagraph | Justification |
-|----------------------|-------------------------------|-------------------|-------------------|------------------|-----------------------------|----------------------------------|--------------------------|---------------|
+| Wavelength Band | Polarimetry Needed (Yes/No) | Necessary Values  | Desired Values | Type of Targets  | Flux Calibration | Flux Stability  | Wavelength Calibration | Wavelength Stability | Low-contrast Coronagraph | Justification |
+|-----------------|-----------------------------|-------------------|----------------|------------------|------------------|-----------------|------------------------|----------------------|--------------------------|---------------|
 
 #### **Guiding Constraints (Exclusions & Prioritization)**
 - **Wavelength Band Restriction:** Strictly cover the following wavelength bands only: Far UV (<120 nm), Mid UV (120 - 250 nm), Near UV (250 - 450 nm), Visible (450 - 900 nm) and Near Infrared (>900 nm).
